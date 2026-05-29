@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{Design comparison: TruthRL vs AnchorGRPO.}
+\label{tab:design}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Feature} & \textbf{TruthRL} & \textbf{AnchorGRPO (Ours)} \\
+\midrule
+    Reward space & $\{-1, 0, +1\}$ (ternary) & $[-2.5, +1.5]$ (continuous) \\
+    Knowledge tracking & Binary OOK (n=256) & Logit-based $p_{\text{know}}$ (O(1)) \\
+    Calibration signal & None & Asymmetric ($\lambda_c = 0.22$) \\
+    Context grounding & None & Anchor reward ($\alpha = 0.4$) \\
+    Hallucination probe & None & Dual-head MLP (2-3M params) \\
+    Gradient collapse & Possible (std=0) & Variance floor ($\epsilon = 0.05$) \\
+    Compute required & 8$\times$H100 & 1$\times$RTX 4000 Ada (16GB) \\
+\bottomrule
+\end{tabular}
+\end{table}

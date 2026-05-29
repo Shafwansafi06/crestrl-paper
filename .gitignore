@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Work directory
+workdir/
+model_cache/
+training_data/
+checkpoints/
+merged_model/
+
+# Results (keep JSON, ignore logs)
+workdir/logs/
+
+# LaTeX auxiliary
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temp
+*.tmp
+*.swp
