@@ -7,6 +7,9 @@ param(
     [switch]$SkipData,
     [switch]$SkipTrain,
     [switch]$SkipCrag,
+    [switch]$SkipDownload,
+    [switch]$SkipBenchmarks,
+    [switch]$SkipExcel,
     [switch]$EvalOnly,
     [string]$MergedModel = ""
 )
@@ -85,8 +88,33 @@ Invoke-Expression "python `"$DIR\evaluate.py`" $marg" 2>&1 | Tee-Object -FilePat
 
 # ─── Step 5: Paper ────────────────────────────────────────────────────────────
 Log ""
-Log "━━━ STEP 5/5: Paper Results ━━━"
+Log "━━━ STEP 5/8: Paper Results ━━━"
 python "$DIR\paper_results.py" 2>&1 | Tee-Object -FilePath $LOG_FILE -Append
+
+# ─── Step 6: Download Datasets ─────────────────────────────────────────────────
+if (-not $SkipDownload) {
+    Log ""
+    Log "━━━ STEP 6/8: Download Datasets (NQ, HotpotQA, MuSiQue) ━━━"
+    python "$DIR\download_datasets.py" 2>&1 | Tee-Object -FilePath $LOG_FILE -Append
+    if ($LASTEXITCODE -ne 0) { Log "WARN: dataset download had issues" }
+} else { Log "Skipping dataset download" }
+
+# ─── Step 7: Run All Benchmarks ────────────────────────────────────────────────
+if (-not $SkipBenchmarks) {
+    Log ""
+    Log "━━━ STEP 7/8: All Benchmarks (CRAG, NQ, HotpotQA, MuSiQue) ━━━"
+    $marg = ""
+    if ($MergedModel -and (Test-Path $MergedModel)) { $marg = "--model $MergedModel" }
+    Invoke-Expression "python `"$DIR\run_all_benchmarks.py`" $marg" 2>&1 | Tee-Object -FilePath $LOG_FILE -Append
+    if ($LASTEXITCODE -ne 0) { Log "WARN: some benchmarks had issues" }
+} else { Log "Skipping benchmarks" }
+
+# ─── Step 8: Export Excel ──────────────────────────────────────────────────────
+if (-not $SkipExcel) {
+    Log ""
+    Log "━━━ STEP 8/8: Export Excel ━━━"
+    python "$DIR\export_excel.py" 2>&1 | Tee-Object -FilePath $LOG_FILE -Append
+} else { Log "Skipping Excel export" }
 
 # ─── Done ─────────────────────────────────────────────────────────────────────
 Log ""
@@ -94,6 +122,7 @@ Log "============================================================"
 Log "  COMPLETE"
 Log "============================================================"
 Log "Results: $(Join-Path $WORK 'results')"
+Log "Excel:   $(Join-Path $WORK 'results' 'all_benchmarks.xlsx')"
 Log "Tables:  $(Join-Path $WORK 'paper' 'tables')"
 Log "Figures: $(Join-Path $WORK 'paper' 'figures')"
 Log ""

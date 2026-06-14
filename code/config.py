@@ -16,7 +16,12 @@ CRAG_DIR = WORK_DIR / "crag_data"
 LOG_DIR = WORK_DIR / "logs"
 MODEL_CACHE_DIR = WORK_DIR / "model_cache"
 
-for d in [WORK_DIR, DATA_DIR, CHECKPOINT_DIR, MERGED_DIR, RESULTS_DIR, CRAG_DIR, LOG_DIR, MODEL_CACHE_DIR]:
+NQ_DIR = WORK_DIR / "nq_data"
+HOTPOTQA_DIR = WORK_DIR / "hotpotqa_data"
+MUSIQUE_DIR = WORK_DIR / "musique_data"
+
+for d in [WORK_DIR, DATA_DIR, CHECKPOINT_DIR, MERGED_DIR, RESULTS_DIR, CRAG_DIR,
+          NQ_DIR, HOTPOTQA_DIR, MUSIQUE_DIR, LOG_DIR, MODEL_CACHE_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
 BASE_MODEL = "mistralai/Mistral-7B-Instruct-v0.3"
@@ -96,9 +101,38 @@ CRAG_DATASET = "crag-check/crag-mix-simplified"
 CRAG_MAX_SAMPLES = 500
 CRAG_TOP_K_PASSAGES = 5  # retrieve top-k passages per query
 
+# ─── NQ Benchmark ─────────────────────────────────────────────────────────────
+
+NQ_DATASET = "google-research-datasets/natural_questions"
+NQ_MAX_SAMPLES = None  # Full dataset
+
+# ─── HotpotQA Benchmark ───────────────────────────────────────────────────────
+
+HOTPOTQA_DATASET = "hotpotqa/hotpot_qa"
+HOTPOTQA_MAX_SAMPLES = None  # Full dataset
+
+# ─── MuSiQue Benchmark ────────────────────────────────────────────────────────
+
+MUSIQUE_DATASET = "dgslibisey/MuSiQue"
+MUSIQUE_MAX_SAMPLES = None  # Full dataset
+
 # ─── Result Paths ─────────────────────────────────────────────────────────────
 
 EVAL_RESULTS = RESULTS_DIR / "evaluation.json"
 CRAG_BASE_RESULTS = RESULTS_DIR / "crag_base.json"
 CRAG_FINETUNED_RESULTS = RESULTS_DIR / "crag_finetuned.json"
 CRAG_COMPARISON = RESULTS_DIR / "crag_comparison.json"
+
+NQ_BASE_RESULTS = RESULTS_DIR / "nq_base.json"
+NQ_FINETUNED_RESULTS = RESULTS_DIR / "nq_finetuned.json"
+NQ_COMPARISON = RESULTS_DIR / "nq_comparison.json"
+
+HOTPOTQA_BASE_RESULTS = RESULTS_DIR / "hotpotqa_base.json"
+HOTPOTQA_FINETUNED_RESULTS = RESULTS_DIR / "hotpotqa_finetuned.json"
+HOTPOTQA_COMPARISON = RESULTS_DIR / "hotpotqa_comparison.json"
+
+MUSIQUE_BASE_RESULTS = RESULTS_DIR / "musique_base.json"
+MUSIQUE_FINETUNED_RESULTS = RESULTS_DIR / "musique_finetuned.json"
+MUSIQUE_COMPARISON = RESULTS_DIR / "musique_comparison.json"
+
+ALL_BENCHMARKS_XLSX = RESULTS_DIR / "all_benchmarks.xlsx"
