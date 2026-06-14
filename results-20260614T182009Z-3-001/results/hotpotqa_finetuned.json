@@ -1,0 +1,19 @@
+{
+  "model": "AnchorGRPO Mistral-7B",
+  "dataset": "HotpotQA",
+  "total": 7405,
+  "accuracy": 50.18230925050642,
+  "hallucination_rate": 20.14854827819041,
+  "refusal_rate": 46.59014179608373,
+  "truthfulness": 76.62390276839973,
+  "time_seconds": 66818.10991024971,
+  "domain_breakdown": {
+    "hotpotqa": {
+      "accuracy": 50.18230925050642,
+      "hallucination_rate": 20.14854827819041,
+      "refusal_rate": 46.59014179608373,
+      "truthfulness": 76.62390276839973,
+      "count": 7405
+    }
+  }
+}

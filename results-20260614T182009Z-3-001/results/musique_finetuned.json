@@ -1,0 +1,19 @@
+{
+  "model": "AnchorGRPO Mistral-7B",
+  "dataset": "MuSiQue",
+  "total": 2417,
+  "accuracy": 12.825817128671908,
+  "hallucination_rate": 2.399669011170873,
+  "refusal_rate": 94.95242035581299,
+  "truthfulness": 105.37856847331402,
+  "time_seconds": 36857.146111249924,
+  "domain_breakdown": {
+    "musique": {
+      "accuracy": 12.825817128671908,
+      "hallucination_rate": 2.399669011170873,
+      "refusal_rate": 94.95242035581299,
+      "truthfulness": 105.37856847331402,
+      "count": 2417
+    }
+  }
+}

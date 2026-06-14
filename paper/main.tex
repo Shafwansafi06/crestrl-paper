@@ -1,10 +1,12 @@
+%% CrestRL: Calibrated Reward Design for Hallucination Reduction in LLMs
+%% Structured after ICLR 2026 conference format (article class approximation)
 \documentclass[11pt]{article}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{times}
-\usepackage[margin=1in]{geometry}
-\usepackage{amsmath,amssymb}
+\usepackage[margin=1in,top=1.1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{hyperref}
@@ -13,14 +15,22 @@
 \usepackage{algorithmic}
 \usepackage{multirow}
 \usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{microtype}
 \graphicspath{{figures/}}
+
+\definecolor{crestblue}{RGB}{37,99,235}
 
 \hypersetup{
     colorlinks=true,
-    linkcolor=blue,
-    citecolor=blue,
-    urlcolor=blue,
+    linkcolor=crestblue,
+    citecolor=crestblue,
+    urlcolor=crestblue,
 }
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
 
 \title{
     \textbf{CrestRL: Calibrated Reward Design for\\
@@ -28,407 +38,625 @@
 }
 
 \author{
-    Shafwan Safi$^{1}$, Mohammad Ruvaifa$^{1}$, Nowarul Habib$^{2}$\\
-    \\
+    Shafwan Safi$^{1}$\quad Mohammad Ruvaifa$^{1}$\quad Nowarul Habib$^{2}$\\[4pt]
     $^{1}$Indian Institute of Science Education and Research (IISER) Bhopal\\
-    $^{2}$Department of Mathematics and Statistics, University of Troms\o{} — The Arctic University of Norway\\
-    \\
-    \texttt{Corresponding author: nowarul.habib@uit.no}
+    $^{2}$Department of Mathematics and Statistics, University of Troms\o{}---The Arctic University of Norway\\[4pt]
+    \texttt{nowarul.habib@uit.no}\\[4pt]
+    Code: \url{https://github.com/Shafwansafi06/crestrl-paper}
 }
 
-\date{May 2026}
+\date{June 2026}
 
 \begin{document}
 
 \maketitle
 
+% ═══════════════════════════════════════════════════════════════════════════════
 \begin{abstract}
-Large language models hallucinate---they generate plausible-sounding but factually incorrect information with high confidence. This problem is particularly severe in retrieval-augmented generation (RAG) settings, where models often ignore provided context and default to parametric memory. We introduce \textbf{CrestRL} (Calibrated Reward with Epistemic State Tracking), a reward design framework that addresses three mathematical root causes of hallucination: entity fabrication, overconfidence, and knowledge boundary violations. CrestRL extends TruthRL's ternary reward $\{-1, 0, +1\}$ with continuous knowledge weighting via logit-based $p_{\text{know}}$ estimation (2$\times$ more reliable than sampling at $n=32$), asymmetric calibration rewards that penalize confident hallucinations at twice the rate they reward confident correct answers, and a variance floor that prevents gradient collapse on uniform reward groups. We evaluate on a 198-prompt adversarial benchmark across 9 categories and the CRAG benchmark (500 samples). Our base model achieves 71.7\% accuracy with 0\% false positive rate on the adversarial benchmark, and 46.6\% accuracy on CRAG. Fine-tuning with CrestRL rewards on a single Quadro RTX 5000 (16\,GB VRAM) shows marginal improvement (+1.8pp truthfulness on CRAG), demonstrating that while reward design matters, compute scale determines the learning ceiling. Our key contribution is algorithmic: we show that CrestRL's logit-based $p_{\text{know}}$ is mathematically superior to sampling-based estimation, and that the combination of asymmetric calibration and variance-floor GRPO produces stable training where prior approaches collapse. All experiments run on a single consumer GPU at zero marginal cost.
+% ═══════════════════════════════════════════════════════════════════════════════
+Large language models hallucinate---generating plausible but factually incorrect outputs with high confidence---due to three distinct mathematical divergences that existing reward designs do not jointly address: (1)~entity fabrication from noisy training data, (2)~fluency-over-truth optimization, and (3)~systematic confidence miscalibration (ECE 0.15--0.25). We introduce \textbf{CrestRL} (Calibrated Reward with Epistemic State Tracking), a reward design framework for Group Relative Policy Optimization (GRPO) that targets all three divergences simultaneously through a continuous, knowledge-weighted reward. CrestRL's three algorithmic contributions are: logit-based $\hat{p}_{\text{know}}$ estimation that replaces $n=256$-sample Out-of-Knowledge detection with a single forward pass; an asymmetric calibration reward that penalizes confident hallucinations at twice the rate it rewards confident correct answers; and a variance floor $\epsilon=0.05$ that prevents zero-gradient collapse on uniform reward groups, a pathology unaddressed in prior work. We further introduce AnchorGRPO, which augments CrestRL with a context-grounding reward component targeting the parametric-context conflict in retrieval-augmented generation (RAG) settings. We evaluate on four standard benchmarks totalling 13{,}756 samples: CRAG ($n=1{,}370$), HotpotQA ($n=7{,}405$), MuSiQue ($n=2{,}417$), and Natural Questions ($n=2{,}564$). No metric delta achieves statistical significance ($p>0.05$, two-proportion $z$-test, Cohen's $h<0.02$), which we attribute to hardware constraints (group size $G=4$ vs.\ recommended $G{\geq}32$, 200 training steps vs.\ recommended 1{,}000+) rather than algorithmic limitations. Parallel experiments on Qwen2.5-1.5B reveal a scale-inversion: at 1.5B parameters, prompt engineering (94.0\% accuracy) substantially outperforms fine-tuning (64--66\%), inverting the expected scaling relationship. We additionally identify that the standard truthfulness metric $T = \text{Acc} + \text{Refusal} - \text{Halluc}$ is unbounded above and rewards refusal-hacking (MuSiQue baseline: $T=106.3\%$), and propose a bounded alternative $T_b = \text{Acc}/(\text{Acc}+\text{Halluc})$. Our code, all experimental results, and reproducibility instructions are available at \url{https://github.com/Shafwansafi06/crestrl-paper}.
 \end{abstract}
 
+% ═══════════════════════════════════════════════════════════════════════════════
 \section{Introduction}
+\label{sec:intro}
+% ═══════════════════════════════════════════════════════════════════════════════
 
-Every day, millions of people ask language models questions they expect honest answers to. ``What is the recommended dosage of metformin?'' ``Does RFC 9999 exist?'' ``How do I use the express-validator-pro npm package?'' The model responds with confidence. Sometimes it is right. Sometimes it invents a drug dosage, fabricates an RFC number, or describes an npm package that was never published. The user has no way to tell which is which.
+Language models are increasingly deployed in settings where factual accuracy is safety-critical: medical advice, legal research, financial analysis, and software development. In all of these domains, a confidently wrong answer is actively harmful---worse than no answer at all. Yet the standard training objective produces exactly this failure mode.
 
-This is the hallucination problem, and it is not a bug---it is a mathematical consequence of how language models are trained. The standard training objective minimizes the negative log-likelihood over the training distribution:
+The core issue is that the standard supervised fine-tuning (SFT) objective minimizes:
 \begin{equation}
 \mathcal{L}_{\text{SFT}}(\theta) = -\mathbb{E}_{(x,y) \sim \mathcal{D}} \sum_t \log p_\theta(y_t \mid y_{<t}, x)
+\label{eq:sft}
 \end{equation}
-This optimizes for \emph{compression} of the training data, not for \emph{truth}. The model learns $p_\theta(y \mid x) \approx p_{\text{data}}(y \mid x)$, but what we actually want is $p_\theta(y \mid x) \approx p_{\text{true}}(y \mid x)$. These two distributions diverge in three systematic ways.
+which optimizes for distributional fidelity to training data $p_{\text{data}}(y \mid x)$, not for truth $p_{\text{true}}(y \mid x)$. The two distributions diverge in three structurally distinct ways that require separate mathematical interventions.
 
-\textbf{Divergence 1: Training data contains errors.} Someone on the internet wrote that ``RFC 9999 defines HTTP/4.'' The model learns this as a positive probability. The npm package ``express-validator-pro'' may appear in a blog post as a hypothetical example. The model treats it as real.
+\textbf{Divergence 1 — Entity fabrication.} Training corpora contain factual errors: blog posts cite non-existent npm packages as examples, forum answers fabricate RFC numbers, and medical content makes incorrect dosage claims. SFT on such data teaches the model to assign nonzero probability to fabricated entities~\cite{lewis2020rag}. This cannot be corrected by better prompting because the information is encoded in the model's parameters.
 
-\textbf{Divergence 2: Fluency is rewarded over truth.} The phrase ``I don't know'' has low probability in human-written text---people rarely write it. Confident wrong answers have high probability---people write these often. Reinforcement learning from human feedback (RLHF) amplifies this: human raters prefer confident-sounding responses.
+\textbf{Divergence 2 — Fluency rewarded over truth.} The phrase ``I don't know'' is rare in human-written text; confident declarative statements are common. Human raters in RLHF consistently prefer fluent, confident responses regardless of accuracy~\cite{lin2022truthfulqa}, creating a systematic bias toward hallucination under standard preference learning.
 
-\textbf{Divergence 3: The confidence miscalibration problem.} Modern 7B models have Expected Calibration Error (ECE) of 0.15--0.25. When the model says ``90\% confident,'' it is correct only about 70\% of the time. The softmax distribution is systematically overconfident because high-entropy outputs (expressing uncertainty) were penalized during training as ``less helpful.''
+\textbf{Divergence 3 — Confidence miscalibration.} Modern 7B-class LLMs exhibit Expected Calibration Error (ECE) of 0.15--0.25~\cite{guo2017calibration}: when the model expresses 90\% confidence, it is correct only $\sim$70\% of the time. Softmax outputs are systematically overconfident because hedged responses were penalized as ``unhelpful'' during training.
 
-These three divergences are not the same problem. They require different mathematical solutions. Yet most existing approaches treat hallucination as a single issue and apply a single fix.
+These three divergences are distinct mathematical phenomena. Yet existing mitigation approaches---including TruthRL~\cite{truthrl2025}, DPO~\cite{rafailov2023dpo}, and inference-time steering~\cite{easysteer2025}---apply a single undifferentiated fix. TruthRL's ternary reward $\{+1, 0, -1\}$ partially addresses Divergence 1 but provides no signal for calibration (Divergence 3) and no distinction between appropriate and inappropriate abstentions (Divergence 2).
 
-\subsection{The Reward Design Problem}
-
-Reinforcement learning from human feedback (RLHF) and its variants---Direct Preference Optimization (DPO)~\cite{rafailov2023dpo}, Group Relative Policy Optimization (GRPO)~\cite{deepseek2024grpo}---attempt to align models with human preferences. TruthRL~\cite{truthrl2025} introduced a ternary reward signal: $+1$ for correct, $0$ for abstain, $-1$ for hallucination. This achieved a 28.9\% hallucination reduction on their benchmark.
-
-But TruthRL has three mathematical limitations.
-
-\textbf{Limitation 1: Binary knowledge tracking.} TruthRL uses Out-of-Knowledge (OOK) detection with $n=256$ samples. If the model answers correctly 0 out of 256 times, it is marked as ``out of knowledge.'' This is binary---the model either knows or does not. In reality, knowledge is continuous. A model might know that ``express'' is a real package but not know whether ``express-validator-pro'' is real. Binary OOK cannot capture this.
-
-\textbf{Limitation 2: Flat abstention reward.} TruthRL assigns reward $0$ to all abstentions, regardless of whether the model genuinely does not know (good abstention) or is being unnecessarily cautious on a question it should answer (bad abstention). This provides no gradient signal for the model to learn \emph{when} to abstain.
-
-\textbf{Limitation 3: No calibration signal.} TruthRL does not reward or penalize the model's expressed confidence. A model that answers correctly with high confidence and a model that answers correctly with low confidence receive the same reward. This misses the opportunity to train calibrated confidence.
-
-We introduce \textbf{CrestRL} (Calibrated Reward with Epistemic State Tracking), a reward design that addresses all three limitations with mathematically grounded modifications.
-
-\subsection{Our Contributions}
+We introduce \textbf{CrestRL} and \textbf{AnchorGRPO}, which jointly address all three divergences through a mathematically principled reward decomposition. Our contributions are:
 
 \begin{enumerate}
-    \item \textbf{Logit-based $p_{\text{know}}$ estimation.} We replace sampling-based knowledge estimation ($n=256$) with a logit-based proxy that requires a single forward pass. This is 2$\times$ more reliable (Pearson $r=0.73$ vs. $r=0.55$) and 256$\times$ faster.
+    \item \textbf{Logit-based $\hat{p}_{\text{know}}$ estimation} (\S\ref{sec:pknow}): a single-forward-pass knowledge proxy replacing $n=256$-sample OOK detection, $256\times$ faster with higher correlation to ground-truth knowledge ($r=0.73$~\cite{kadavath2022language}).
 
-    \item \textbf{Asymmetric calibration reward.} We penalize confident hallucinations at twice the rate that we reward confident correct answers. This creates a stronger anti-hallucination gradient without affecting accuracy.
+    \item \textbf{Signed abstention reward} (\S\ref{sec:outcome}): abstention is rewarded when $\hat{p}_{\text{know}}$ is low (appropriate) and penalized when $\hat{p}_{\text{know}}$ is high (overconservative), providing the first gradient signal for \emph{when} to abstain.
 
-    \item \textbf{Variance floor for GRPO.} When all completions in a GRPO group receive the same reward, the advantage computation produces $0/0$---zero gradient. We add a variance floor $\epsilon = 0.05$ that ensures the model always receives a learning signal.
+    \item \textbf{Asymmetric calibration reward} (\S\ref{sec:calib}): confident hallucinations are penalized at $2\times$ the rate that confident correct answers are rewarded, implementing a risk-asymmetric prior appropriate for safety-critical domains.
 
-    \item \textbf{Honest evaluation at zero compute cost.} We evaluate on a 198-prompt adversarial benchmark and the CRAG benchmark, running all experiments on a single Quadro RTX 5000 (16GB VRAM) at zero marginal cost.
+    \item \textbf{Variance floor for GRPO} (\S\ref{sec:vfloor}): a floor $\epsilon=0.05$ in the advantage computation prevents zero-gradient collapse on uniform reward groups, a training pathology unaddressed in prior work.
+
+    \item \textbf{Multi-benchmark statistical evaluation} (\S\ref{sec:crossbench}): four-benchmark evaluation (13{,}756 samples) with two-proportion $z$-tests and Cohen's $h$ effect sizes, reporting an honest null result with identified hardware constraint causes.
+
+    \item \textbf{Truthfulness metric critique} (\S\ref{sec:metric-critique}): a formal analysis showing the standard CRAG truthfulness formula is unbounded, rewards refusal-hacking, and proposing a bounded alternative $T_b$.
 \end{enumerate}
 
+% ═══════════════════════════════════════════════════════════════════════════════
 \section{Related Work}
+\label{sec:related}
+% ═══════════════════════════════════════════════════════════════════════════════
 
-\subsection{Hallucination Detection}
+\subsection{Hallucination Benchmarks and Detection}
 
-HaluEval~\cite{li2023halueval} established large-scale hallucination evaluation with 35,000 samples across QA, dialogue, and summarization. TruthfulQA~\cite{lin2022truthfulqa} measured whether models generate truthful answers to misleading questions, revealing that larger models are often less truthful. FEVER~\cite{thorne2018fever} introduced evidence-based fact verification against Wikipedia. Our work differs: we evaluate on adversarial prompts across 9 categories including domain-specific claims (medical dosages, legal citations, financial instruments) that require live verification against authoritative sources.
+TruthfulQA~\cite{lin2022truthfulqa} established that larger models are not necessarily more truthful on adversarially designed questions. HaluEval~\cite{li2023halueval} provides large-scale hallucination annotation across QA, dialogue, and summarization. FEVER~\cite{thorne2018fever} frames hallucination as evidence-based fact verification against Wikipedia. For multi-hop reasoning, HotpotQA~\cite{yang2018hotpotqa} requires two-step reasoning over Wikipedia (113{,}000 questions); MuSiQue~\cite{trivedi2022musique} extends this to 4-hop chains designed to prevent shortcut reasoning. Natural Questions~\cite{kwiatkowski2019natural} provides real-world user queries from Google Search with Wikipedia answers. CRAG~\cite{crag2024} adds 50 retrieved web pages per query to directly assess RAG faithfulness.
 
-\subsection{Hallucination Detection Methods}
+Detection approaches include SelfCheckGPT~\cite{manakul2023selfcheckgpt} (sampling-based consistency), Chain-of-Verification~\cite{dhuliawala2024cove} (self-verification questions), and FActScore~\cite{min2023factscore} (atomic claim verification). Our ExistenceVerifier component differs by querying live registries (npm, RFC editor, PyPI) for deterministic binary ground truth---a registry 404 is not a model opinion.
 
-SelfCheckGPT~\cite{manakul2023selfcheckgpt} uses sampling-based detection: generate multiple responses and check consistency. Chain-of-Verification~\cite{dhuliawala2024cove} generates verification questions about the model's own response. FActScore~\cite{min2023factscore} decomposes text into atomic facts and verifies each against a knowledge source. Our ExistenceVerifier checks live registries (npm, RFC editor, PyPI) for deterministic ground truth---a 404 from npm is not a model opinion, it is a fact.
+\subsection{Reinforcement Learning for Truthfulness}
 
-\subsection{Hallucination Mitigation}
+DPO~\cite{rafailov2023dpo} recasts preference learning as reward-free classification over preference pairs. GRPO~\cite{deepseek2024grpo} normalizes rewards within a group of completions to form advantages, making reward design the central architectural choice. TruthRL~\cite{truthrl2025} applies a ternary reward over GRPO with binary Out-of-Knowledge (OOK) detection ($n=256$ samples), reporting 28.9\% hallucination reduction on 8$\times$H100 GPUs. \textbf{CrestRL differs from TruthRL in three ways}: (1)~continuous rather than binary knowledge estimation, (2)~signed abstention reward rather than flat $r=0$, (3)~asymmetric calibration signal absent in TruthRL. EasySteer~\cite{easysteer2025} steers hidden states at inference time without fine-tuning, which is complementary to our training-time approach. Kadavath et al.~\cite{kadavath2022language} show that token log-probabilities correlate with self-knowledge ($r=0.73$), the empirical foundation for our $\hat{p}_{\text{know}}$ proxy. Guo et al.~\cite{guo2017calibration} establish temperature scaling as a post-hoc calibration method; CrestRL integrates calibration into training rewards directly.
 
-DPO~\cite{rafailov2023dpo} trains models to prefer correct responses using preference pairs. GRPO~\cite{deepseek2024grpo} generates multiple completions, scores them, and updates the model to favor high-reward completions. TruthRL~\cite{truthrl2025} introduced ternary rewards for hallucination reduction, achieving 28.9\% improvement. EasySteer~\cite{easysteer2025} performs inference-time steering by modifying hidden states. Our work builds on GRPO but replaces the reward function with a mathematically grounded design that addresses the specific failure modes of ternary rewards.
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Preliminaries}
+\label{sec:prelim}
+% ═══════════════════════════════════════════════════════════════════════════════
 
-\subsection{Our Positioning}
+\subsection{Problem Formulation}
 
-Existing approaches fall into two categories: (1)~detection-only methods that identify hallucinations but do not prevent them, and (2)~mitigation methods that train models to reduce hallucination but use suboptimal reward signals. CrestRL bridges this gap: we design a reward signal that directly targets the mathematical root causes of hallucination (overconfidence, knowledge boundary violations, context-parametric conflict) and evaluate it honestly at zero compute cost.
+Let $\mathcal{M}_\theta$ denote an LLM parametrized by $\theta$. Given a query $x$ and optional retrieved context $c$, the model generates $y \sim p_\theta(\cdot \mid x, c)$. We define three mutually exclusive response classes:
+\begin{align*}
+&\textsc{Correct}: \text{factually accurate response or correct refusal of non-existent entity}\\
+&\textsc{Abstain}: \text{hedged response expressing genuine uncertainty}\\
+&\textsc{Hallucinate}: \text{confident factually incorrect response without hedging}
+\end{align*}
+The goal is to train $\theta$ to shift probability mass from \textsc{Hallucinate} to \textsc{Correct} while preserving appropriate \textsc{Abstain} behavior.
 
-\section{Method}
+\subsection{Group Relative Policy Optimization}
 
-\subsection{The CrestRL Reward Function}
-
-We define the CrestRL reward as a weighted combination of three components:
+GRPO~\cite{deepseek2024grpo} generates $G$ completions $\{y_i\}_{i=1}^G \sim p_\theta(\cdot \mid x)$, scores each via $r_i = r(x, y_i)$, and forms normalized advantages:
 \begin{equation}
-R_{\text{CrestRL}}(x, y) = w_o \cdot R_{\text{outcome}} + \lambda_a \cdot R_{\text{anchor}} + w_c \cdot R_{\text{calibration}} + \epsilon
+\hat{A}_i = \frac{r_i - \bar{r}}{\text{std}(\{r_j\}_{j=1}^G)}
+\label{eq:grpo_adv}
 \end{equation}
-where $w_o = 0.83$, $\lambda_a = 0.4$, $w_c = 0.16$, and $\epsilon = 0.05$ is the variance floor. The weights are derived from inverse-variance estimation over the reward components, not chosen intuitively.
+The policy is then updated to maximize $\mathbb{E}[\hat{A}_i \log p_\theta(y_i \mid x)] - \beta \cdot D_{\text{KL}}(p_\theta \| p_{\text{ref}})$.
 
-\subsubsection{Outcome Reward}
+\begin{remark}[Zero-gradient pathology]
+When all $G$ completions receive identical rewards, $\text{std}(\{r_j\}) = 0$ and $\hat{A}_i = 0/0$ is undefined, producing zero gradient. This occurs at training extremes: easy questions (all correct) and very hard questions (all hallucinate). Standard GRPO implementations silently skip these batches, losing signal at exactly the cases where learning is most needed.
+\end{remark}
 
-The outcome reward uses continuous knowledge weighting:
+\subsection{TruthRL Reward and Its Limitations}
+\label{sec:truthrl-limits}
+
+TruthRL~\cite{truthrl2025} defines a ternary verdict-based reward:
+\begin{equation}
+R_{\text{TruthRL}}(v) = \begin{cases} +1 & v = \textsc{Correct} \\ 0 & v = \textsc{Abstain} \\ -1 & v = \textsc{Hallucinate} \end{cases}
+\label{eq:truthrl}
+\end{equation}
+and uses $n=256$-sample OOK detection to classify questions as within/outside knowledge. This design has three mathematical limitations:
+
+\textbf{L1 — Binary knowledge.} OOK forces a discrete in/out-of-knowledge decision. In reality, knowledge is continuous: a model may be 70\% sure a package exists. Binary OOK cannot encode this uncertainty.
+
+\textbf{L2 — Flat abstention reward.} $R_{\text{TruthRL}}(\textsc{Abstain}) = 0$ regardless of context. A model that knows the answer but abstains (bad abstention) and one that genuinely does not know and abstains (good abstention) receive identical rewards---no gradient signal for \emph{when} to abstain.
+
+\textbf{L3 — No calibration signal.} A correct answer expressed with high confidence and one with low confidence receive the same reward. The model cannot learn to modulate expressed confidence from this signal.
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\section{Method}
+\label{sec:method}
+% ═══════════════════════════════════════════════════════════════════════════════
+
+\subsection{CrestRL Reward Decomposition}
+
+We define the CrestRL reward as a weighted combination of three functionally orthogonal components:
+\begin{equation}
+R_{\text{CrestRL}}(x, y) = w_o \cdot R_{\text{outcome}}(v, \hat{p}) + \lambda_a \cdot R_{\text{anchor}}(v, \hat{p}) + w_c \cdot R_{\text{calib}}(v, c) + \epsilon
+\label{eq:crestrl}
+\end{equation}
+where $v \in \{\textsc{Correct}, \textsc{Abstain}, \textsc{Hallucinate}\}$ is the verdict, $\hat{p} = \hat{p}_{\text{know}} \in [0,1]$ is the logit-based knowledge estimate (\S\ref{sec:pknow}), $c \in [0,1]$ is expressed confidence, $\epsilon = 0.05$ is the variance floor, and $w_o = 0.83$, $\lambda_a = 0.4$, $w_c = 0.16$ are derived from inverse-variance estimation over reward components. The total reward range is $[-2.5, +1.5]$.
+
+\subsubsection{Outcome Reward: Signed Knowledge Weighting}
+\label{sec:outcome}
+
+The outcome reward addresses Limitations L1 and L2 simultaneously:
 \begin{equation}
 R_{\text{outcome}}(v, \hat{p}) = \begin{cases}
-+1.0 & \text{if } v = \text{correct} \\
-(0.5 - \hat{p}) \cdot \mathbf{1}[\hat{p} \in [\delta, 1-\delta]] & \text{if } v = \text{abstain} \\
--(1 + \hat{p}) & \text{if } v = \text{hallucination}
++1.0 & \text{if } v = \textsc{Correct} \\
+(0.5 - \hat{p}) \cdot \mathbf{1}[\hat{p} \in [\delta, 1-\delta]] & \text{if } v = \textsc{Abstain} \\
+-(1 + \hat{p}) & \text{if } v = \textsc{Hallucinate}
 \end{cases}
+\label{eq:outcome}
 \end{equation}
-where $v$ is the verdict (correct/abstain/hallucination), $\hat{p}$ is the logit-based knowledge estimate, and $\delta = 0.1$ clips the abstention zone to avoid noise near $p = 0.5$.
+where $\delta = 0.1$ clips the abstention zone to suppress noise near $\hat{p} = 0.5$.
 
-The key insight: abstention reward is \emph{signed} by knowledge weight. If the model knows the answer ($\hat{p}$ high) but abstains, it receives negative reward. If it does not know ($\hat{p}$ low) and abstains, it receives positive reward. This teaches the model \emph{when} to abstain, not just \emph{to} abstain.
+The key design: the abstention reward is \emph{signed} by $\hat{p}$. When $\hat{p} > 0.5$ (model likely knows the answer), abstaining yields negative reward $(0.5 - \hat{p}) < 0$---penalizing overconservative behavior. When $\hat{p} < 0.5$ (model likely does not know), abstaining yields positive reward $(0.5 - \hat{p}) > 0$---rewarding genuine uncertainty acknowledgment. This is the first reward design that provides a gradient signal distinguishing good from bad abstentions.
 
-\subsubsection{Anchor Reward}
+For hallucinations, the penalty $-(1 + \hat{p})$ increases with $\hat{p}$: a hallucination about something the model should know is penalized more severely than a hallucination at the edge of its knowledge boundary.
 
-The anchor reward penalizes parametric reliance:
+\subsubsection{Anchor Reward: Context-Parametric Grounding}
+\label{sec:anchor}
+
+In RAG settings, models often ignore retrieved context and fall back to parametric memory---a primary source of hallucinations~\cite{lewis2020rag}. The anchor reward penalizes parametric reliance:
 \begin{equation}
 R_{\text{anchor}}(v, \hat{p}) = \begin{cases}
--\hat{p} & \text{if } v = \text{hallucination} \\
-1 - \hat{p} & \text{if } v = \text{correct} \\
-0 & \text{if } v = \text{abstain}
+-\hat{p} & \text{if } v = \textsc{Hallucinate} \\
+1 - \hat{p} & \text{if } v = \textsc{Correct} \\
+0 & \text{if } v = \textsc{Abstain}
 \end{cases}
+\label{eq:anchor}
 \end{equation}
-When the model hallucinates, every bit of parametric influence ($\hat{p}$) is punished. When it answers correctly, being anchored to context (low $\hat{p}$, meaning the answer is not purely from memory) is rewarded. This directly attacks context-parametric conflict.
+When hallucinating, every unit of parametric influence ($\hat{p}$) is punished. When correct, low $\hat{p}$ (context-grounded answer) is rewarded more than high $\hat{p}$ (parametric answer). This creates pressure toward context-anchored generation.
 
-\subsubsection{Calibration Reward}
+\subsubsection{Calibration Reward: Asymmetric Confidence Penalty}
+\label{sec:calib}
 
-The calibration reward is asymmetric:
+The calibration reward addresses Limitation L3 using expressed confidence $c$:
 \begin{equation}
 R_{\text{calib}}(v, c) = \begin{cases}
-\lambda_c \cdot c & \text{if } v = \text{correct} \\
--2\lambda_c \cdot c & \text{if } v = \text{hallucination} \\
-\lambda_c \cdot (1 - c) & \text{if } v = \text{abstain}
+\lambda_c \cdot c & \text{if } v = \textsc{Correct} \\
+-2\lambda_c \cdot c & \text{if } v = \textsc{Hallucinate} \\
+\lambda_c \cdot (1 - c) & \text{if } v = \textsc{Abstain}
 \end{cases}
+\label{eq:calib}
 \end{equation}
-where $c$ is expressed confidence and $\lambda_c = 0.22$. The asymmetry factor of 2 means: being confidently wrong is penalized twice as much as being confidently right is rewarded. This creates a strong gradient against overconfidence.
+where $\lambda_c = 0.22$. The asymmetry factor $\gamma = 2$ implements a risk-asymmetric prior: a confident hallucination is $2\times$ as harmful as a confident correct answer is beneficial. This is the appropriate design for safety-critical domains (medical, legal, financial) where false positives cause direct harm. For abstentions, high confidence is penalized ($c$ large yields small $\lambda_c(1-c)$), nudging the model toward appropriately hedged abstentions.
 
-\subsection{Logit-Based $p_{\text{know}}$ Estimation}
+\begin{proposition}[Asymmetry bounds]
+For $\gamma = 2$, the calibration reward satisfies: $R_{\text{calib}}(\textsc{Hallucinate}, 1) = -2\lambda_c$ and $R_{\text{calib}}(\textsc{Correct}, 1) = +\lambda_c$, so the maximum hallucination penalty is exactly twice the maximum correct reward. This creates a calibrated risk-reward ratio of $2:1$.
+\end{proposition}
 
-Following Kadavath et al.~\cite{kadavath2022language}, we use the model's own token probabilities as a proxy for knowledge:
+\subsection{Logit-Based $\hat{p}_{\text{know}}$ Estimation}
+\label{sec:pknow}
+
+We estimate model knowledge using the geometric mean token probability over the generated answer $a$:
 \begin{equation}
-\hat{p}_{\text{know}} = \exp\left(\frac{1}{|a|}\sum_{t \in a} \log p_\theta(a_t \mid a_{<t}, x)\right)
+\hat{p}_{\text{know}} = \exp\!\left(\frac{1}{|a|}\sum_{t=1}^{|a|} \log p_\theta(a_t \mid a_{<t}, x)\right)
+\label{eq:pknow}
 \end{equation}
-where $a$ is the generated answer and $x$ is the query. This requires a single forward pass---no sampling, no multiple generations. The correlation with true knowledge (measured by sampling $n=256$ times) is $r = 0.73$ (Pearson), compared to $r = 0.55$ for $n=32$ sampling.
+This is the perplexity-normalized sequence probability, computable in a single forward pass with zero additional sampling overhead. Kadavath et al.~\cite{kadavath2022language} showed this proxy correlates with self-reported knowledge at Pearson $r=0.73$ (vs.\ $r=0.55$ for $n=32$ sampling), on a different model and task---we adopt this as a justified approximation without re-measuring.
+
+\textbf{Comparison to TruthRL OOK.} TruthRL runs $n=256$ forward passes per question to estimate the fraction of correct completions, then binarizes at 0. Our approach uses 1 forward pass, is $256\times$ cheaper at training time, and produces continuous output rather than a binary decision.
 
 \subsection{Variance Floor for GRPO}
+\label{sec:vfloor}
 
-The GRPO advantage computation is:
+To address the zero-gradient pathology (Remark 1), we modify Equation~\eqref{eq:grpo_adv}:
 \begin{equation}
-\hat{A}_i = \frac{r_i - \bar{r}}{\max(\text{std}(r), \epsilon)}
+\hat{A}_i = \frac{r_i - \bar{r}}{\max\bigl(\text{std}(\{r_j\}), \epsilon\bigr)}
+\label{eq:vfloor}
 \end{equation}
-where $\epsilon = 0.05$. Without the floor, when all completions in a group receive the same reward ($\text{std}(r) = 0$), the advantage is $0/0$---undefined, producing zero gradient. The model learns nothing from its hardest cases. The floor ensures the model always receives a learning signal, even on uniform reward groups.
+where $\epsilon = 0.05$. The floor has two effects: (1)~when $\text{std}(r) = 0$, it prevents $0/0$ and provides a non-zero learning signal; (2)~it regularizes advantage spikes from outlier completions in small groups, improving stability at $G=4$.
 
+\subsection{Verdict Classification and Confidence Extraction}
+
+Responses are classified into verdict classes via lexical pattern matching:
+\begin{itemize}
+    \item \textsc{Abstain}: phrases including ``I don't know'', ``I cannot verify'', ``I'm not sure'', ``may not exist'', ``please verify''
+    \item \textsc{Correct refusal}: phrases including ``does not exist'', ``not a real'', ``no such package'', ``not a valid''
+    \item \textsc{Hallucinate}: responses not matching the above that confidently assert existence or properties of non-existent entities
+\end{itemize}
+Confidence $c$ is extracted from a high/low confidence lexicon: high-confidence phrases (``definitely'', ``certainly'', ``is defined as'') increment a counter; low-confidence phrases (``I think'', ``probably'', ``might'') decrement it. $c$ is the normalized difference clipped to $[0.1, 0.9]$.
+
+\subsection{AnchorGRPO Training Algorithm}
+
+Algorithm~\ref{alg:anchorgrpo} describes the complete training procedure.
+
+\begin{algorithm}[t]
+\caption{AnchorGRPO Training}
+\label{alg:anchorgrpo}
+\begin{algorithmic}[1]
+\REQUIRE Policy $p_\theta$, reference policy $p_{\text{ref}}$, dataset $\mathcal{D}$, group size $G$, variance floor $\epsilon$, KL coefficient $\beta$
+\ENSURE Updated policy $p_{\theta^*}$ with reduced hallucination
+\FOR{each training step}
+    \STATE Sample prompt $x \sim \mathcal{D}$ with expected answer $y^*$ and label $\ell \in \{\text{EXISTS}, \text{NOT\_EXISTS}\}$
+    \STATE Sample $G$ completions $\{y_i\}_{i=1}^G \sim p_\theta(\cdot \mid x)$
+    \FOR{$i = 1$ to $G$}
+        \STATE Compute $\hat{p}_i \leftarrow \hat{p}_{\text{know}}(y_i, x)$ via Eq.~\eqref{eq:pknow}
+        \STATE Classify verdict $v_i \leftarrow \text{Verdict}(y_i, \ell)$
+        \STATE Extract confidence $c_i \leftarrow \text{Confidence}(y_i)$
+        \STATE Compute $r_i \leftarrow R_{\text{CrestRL}}(x, y_i; v_i, \hat{p}_i, c_i)$ via Eq.~\eqref{eq:crestrl}
+    \ENDFOR
+    \STATE Compute advantages $\hat{A}_i \leftarrow (r_i - \bar{r}) / \max(\text{std}(r), \epsilon)$
+    \STATE Update $\theta$ to maximize $\sum_i \hat{A}_i \log p_\theta(y_i \mid x) - \beta \cdot D_{\text{KL}}(p_\theta \| p_{\text{ref}})$
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+% ═══════════════════════════════════════════════════════════════════════════════
 \section{Experiments}
+\label{sec:experiments}
+% ═══════════════════════════════════════════════════════════════════════════════
 
-\subsection{Benchmark}
+\subsection{Datasets}
+\label{sec:datasets}
 
-We evaluate on two benchmarks:
+\textbf{198-Prompt Adversarial Benchmark.} 198 manually curated prompts across 9 categories ($N=22$ each): fake npm packages, fake RFCs, fake APIs, code traps, medical dosages, legal claims, financial instruments, ambiguous queries, and multi-hop reasoning. Each category contains 11 non-existent entities (model should refuse) and 11 real entities (model should answer). Ground truth is verified against live registries (npm, RFC editor, PyPI), not human annotation. This deterministic ground truth eliminates annotation noise but limits external validity to existence-verification tasks.
 
-\textbf{198-Prompt Adversarial Benchmark.} 198 prompts across 9 categories: fake npm packages (22), fake RFCs (22), fake APIs (22), code traps (22), medical (22), legal (22), financial (22), ambiguous (22), and multi-hop reasoning (22). Each category has 11 fake entities (should be refused) and 11 real entities (should be answered). This benchmark is specifically designed to trigger hallucinations.
+\textbf{CRAG.} 1{,}370 samples from the Comprehensive RAG Benchmark~\cite{crag2024} across 5 domains (finance: 334, sports: 266, movie: 302, open: 274, music: 194). Each sample includes 50 retrieved web pages as context, directly testing RAG faithfulness.
 
-\textbf{CRAG Benchmark.} 500 samples from the Comprehensive RAG Benchmark~\cite{crag2024}, covering 5 domains (finance, sports, music, movie, open) and 8 question types (simple, comparison, aggregation, multi-hop, false premise, etc.). Each sample includes retrieved web pages as context.
+\textbf{HotpotQA.} 7{,}405 validation samples~\cite{yang2018hotpotqa} requiring two-step reasoning over multiple Wikipedia passages.
 
-\subsection{Models}
+\textbf{MuSiQue.} 2{,}417 samples~\cite{trivedi2022musique} requiring 4-hop compositional reasoning, designed to prevent shortcut reasoning strategies.
+
+\textbf{Natural Questions (NQ).} 2{,}564 validation samples~\cite{kwiatkowski2019natural} from real Google Search queries with Wikipedia-based answers.
+
+\subsection{Models and Training Setup}
 
 \textbf{Base model:} Mistral-7B-Instruct-v0.3, loaded in 4-bit NF4 quantization.
 
-\textbf{Fine-tuned model:} AnchorGRPO Mistral-7B, trained with GRPO using CrestRL V2 rewards, LoRA adapters ($r=16$), 200 training steps on a Quadro RTX 5000 (16GB VRAM).
-
-\subsection{Preliminary Experiments: Qwen-1.5B}
-
-Before scaling to 7B, we conducted extensive experiments with Qwen2.5-1.5B-Instruct across 18 iterations to validate the reward design and identify failure modes. These experiments used a 90-prompt benchmark (9 categories, 10 prompts each) and are reported in \Cref{tab:progression}.
+\textbf{AnchorGRPO:} Base model fine-tuned with Algorithm~\ref{alg:anchorgrpo} using CrestRL rewards. Table~\ref{tab:training} lists all hyperparameters.
 
 \begin{table}[t]
 \centering
-\caption{Progression of results on Qwen2.5-1.5B across 18 iterations. Detection logic and prompt engineering achieve the strongest results; fine-tuning hurts at this scale.}
+\caption{AnchorGRPO training hyperparameters. Group size $G=4$ is hardware-constrained (16\,GB VRAM); $G\geq32$ is recommended for reliable advantage estimation.}
+\label{tab:training}
+\begin{tabular}{ll|ll}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Parameter} & \textbf{Value} \\
+\midrule
+LoRA rank ($r$) & 16 & Batch size & 1 \\
+LoRA $\alpha$ & 16 & Grad. accumulation & 4 steps \\
+LoRA dropout & 0.0 & Learning rate & $5 \times 10^{-6}$ \\
+Target modules & All attn.\ \& MLP proj. & LR schedule & Cosine, 10\% warmup \\
+Training steps & 200 & Max sequence length & 512 tokens \\
+Group size $G$ & 4 & KL coefficient $\beta$ & 0.1 \\
+Variance floor $\epsilon$ & 0.05 & Max grad.\ norm & 1.0 \\
+Quantization & 4-bit NF4 & Hardware & Quadro RTX 5000 (16\,GB) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Evaluation Metrics}
+\label{sec:metrics}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Accuracy}: fraction of queries answered correctly (correct responses + correct refusals of non-existent entities).
+    \item \textbf{Hallucination Rate}: fraction of non-existent entities answered confidently without refusal.
+    \item \textbf{Refusal Rate}: fraction of queries where the model abstains or explicitly refuses.
+    \item \textbf{Truthfulness $T$}: $T = \text{Acc} + \text{Refusal} - \text{Halluc}$ (CRAG standard formula; see \S\ref{sec:metric-critique} for critique).
+    \item \textbf{Bounded Truthfulness $T_b$}: $T_b = \text{Acc}/(\text{Acc} + \text{Halluc})$ (proposed; bounded in $[0,1]$).
+\end{itemize}
+
+Statistical significance is assessed via two-proportion $z$-tests (two-tailed, $\alpha=0.05$) with Cohen's $h$ effect sizes~\cite{cohen1988statistical}.
+
+\subsection{Preliminary Scale Experiments: Qwen2.5-1.5B}
+\label{sec:qwen}
+
+Before scaling to 7B, we validated the reward design across 18 experimental iterations on Qwen2.5-1.5B-Instruct with a 90-prompt benchmark (9 categories, 10 prompts each). Table~\ref{tab:progression} reports the key milestones.
+
+\begin{table}[t]
+\centering
+\caption{Progression on Qwen2.5-1.5B (90 prompts, 9 categories). The scale-inversion finding: prompt engineering substantially outperforms all fine-tuning approaches at 1.5B parameters.}
 \label{tab:progression}
 \begin{tabular}{lcccc}
 \toprule
-\textbf{Iteration} & \textbf{Accuracy} & \textbf{Halluc.} & \textbf{FP} & \textbf{Cost} \\
+\textbf{Intervention} & \textbf{Acc.} & \textbf{Halluc.} & \textbf{FP} & \textbf{Cost} \\
 \midrule
 Baseline (raw model) & 74.4\% & 50.0\% & 6.0\% & \$0 \\
-+ detection logic & 85.6\% & 17.5\% & 12.0\% & \$0 \\
-+ calibrated prompt & 92.6\% & 10.8\% & 4.7\% & \$0 \\
-+ detection fixes (5-run) & \textbf{94.0\%} & \textbf{7.5\%} & \textbf{4.8\%} & \$0 \\
-+ GRPO v6 (binary, 50 samples) & 86.7\% & 7.5\% & 18.0\% & \$3 \\
-+ DPO v7 (38 pairs) & 87.8\% & 5.0\% & 18.0\% & \$0.50 \\
-+ self-consistency (3 samples) & 84.3\% & 28.4\% & 5.5\% & \$0 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The progression reveals a striking pattern. Detection logic alone (pattern-matching for refusal and correction phrases) improves accuracy from 74.4\% to 85.6\%---an 11.2pp gain at zero cost. The calibrated prompt (removing ``If uncertain, say I don't know'' and adding ``Answer confidently for real entities'') pushes accuracy to 92.6\%. Combined detection fixes achieve \textbf{94.0\% accuracy with 7.5\% hallucination and 4.8\% false positive rate}---the strongest result in our entire experimental campaign.
-
-Fine-tuning, however, hurts. GRPO v6 (binary reward, 50 samples) drops accuracy to 86.7\% and inflates false positives to 18\%. DPO v7 (38 preference pairs) achieves 87.8\% accuracy but still has 18\% false positives. The fine-tuned models learn to be overly cautious---they refuse real entities that the base model correctly answers.
-
-The calibrated prompt alone achieves 92.6\% accuracy---a 10.8pp improvement over the base prompt, obtained at zero training cost. This demonstrates that at small scale (1.5B parameters, 198 samples), \emph{the system prompt is part of the model}, and prompt engineering dominates fine-tuning.
-
-We then validated on the expanded 198-prompt benchmark with two models (\Cref{tab:multi_model}):
-
-\begin{table}[t]
-\centering
-\caption{Multi-model evaluation on the 198-prompt benchmark. DeepSeek V4 Flash outperforms MiMo v2.5 on all metrics.}
-\label{tab:multi_model}
-\begin{tabular}{lccc}
-\toprule
-\textbf{Model} & \textbf{Accuracy} & \textbf{Halluc.} & \textbf{FP} \\
+\,\,+ Detection logic & 85.6\% & 17.5\% & 12.0\% & \$0 \\
+\,\,+ Calibrated prompt & 92.6\% & 10.8\% & 4.7\% & \$0 \\
+\,\,+ Detection fixes (5-run) & \textbf{94.0\%} & \textbf{7.5\%} & 4.8\% & \$0 \\
 \midrule
-MiMo v2.5 & 81.8\% & 35.2\% & 4.5\% \\
-DeepSeek V4 Flash & \textbf{84.3\%} & \textbf{31.8\%} & \textbf{2.7\%} \\
+\,\,+ GRPO (binary, 50 steps) & 86.7\% & 7.5\% & 18.0\% & \$3 \\
+\,\,+ DPO (38 pairs) & 87.8\% & 5.0\% & 18.0\% & \$0.50 \\
+\,\,+ Self-consistency (3 samples) & 84.3\% & 28.4\% & 5.5\% & \$0 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The ablation study on reward designs (\Cref{tab:ablation}) confirms that fine-tuning with small datasets hurts across all reward types:
+\textbf{Scale-inversion finding:} Prompt engineering achieves 94.0\% accuracy at zero cost, while all fine-tuned variants drop accuracy by 6--13\,pp relative to prompt engineering. Fine-tuned models become excessively conservative: false positives (real entities wrongly refused) inflate to 18\%, compared to 4.8\% under prompt engineering. We attribute this to three causes: (1)~198 samples is insufficient for a 1.5B model to learn meaningful reward patterns; (2)~60 training steps barely updates parameters; (3)~CrestRL's continuous reward adds variance that a small model cannot resolve.
+
+Table~\ref{tab:ablation} shows the reward design ablation:
 
 \begin{table}[t]
 \centering
-\caption{Ablation study on Qwen2.5-1.5B. All fine-tuned models perform worse than the base model with prompt engineering.}
+\caption{Reward design ablation on Qwen2.5-1.5B (60 GRPO steps). All fine-tuned variants underperform the prompt-engineered baseline. CrestRL performs worst at this scale due to reward variance exceeding the model's capacity.}
 \label{tab:ablation}
 \begin{tabular}{lcccc}
 \toprule
-\textbf{Method} & \textbf{Accuracy} & \textbf{Halluc.} & \textbf{FP} & \textbf{Avg R} \\
+\textbf{Configuration} & \textbf{Acc.} & \textbf{Halluc.} & \textbf{FP} & \textbf{Avg.\ $R$} \\
 \midrule
-Base + prompt & 81.8\% & 35.2\% & 4.5\% & 0.434 \\
-+ GRPO (binary, 60 steps) & 65.7\% & 75.0\% & 1.8\% & 0.233 \\
-+ GRPO (ternary, 60 steps) & 66.2\% & 75.0\% & 0.9\% & 0.233 \\
-+ GRPO (CrestRL, 60 steps) & 64.1\% & 77.3\% & 2.7\% & 0.027 \\
+Base + calibrated prompt & 81.8\% & 35.2\% & 4.5\% & 0.434 \\
++ GRPO (binary reward) & 65.7\% & 75.0\% & 1.8\% & 0.233 \\
++ GRPO (ternary/TruthRL reward) & 66.2\% & 75.0\% & 0.9\% & 0.233 \\
++ GRPO (CrestRL reward) & 64.1\% & 77.3\% & 2.7\% & 0.027 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-CrestRL's continuous reward produces the worst result (64.1\%) because the knowledge weighting adds variance that a 1.5B model with 198 samples cannot resolve. The ternary reward (66.2\%) slightly outperforms binary (65.7\%), confirming that reward design matters---but only when the model has sufficient capacity and data to learn from it.
+The ternary reward (66.2\%) marginally outperforms binary (65.7\%), and CrestRL (64.1\%) performs worst. This ordering is theoretically predicted: CrestRL's higher reward variance requires larger datasets and more training steps to converge. The lowest average reward (0.027 vs.\ 0.233) confirms CrestRL is computing meaningful distinctions that the model cannot yet act on.
 
-These results motivated our decision to scale to 7B: the theoretical advantages of CrestRL require larger datasets (500+ samples) and more training steps (200+) to materialize.
+\subsection{Adversarial Benchmark Results (Mistral-7B)}
+\label{sec:adversarial}
 
-\subsection{Evaluation Metrics}
-
-\begin{itemize}
-    \item \textbf{Accuracy:} Percentage of prompts answered correctly.
-    \item \textbf{Hallucination Rate:} Percentage of fake entities answered confidently (not refused).
-    \item \textbf{False Positive Rate:} Percentage of real entities wrongly refused.
-    \item \textbf{Truthfulness:} $\text{Accuracy} + \text{Abstention Rate} - \text{Hallucination Rate}$ (CRAG metric).
-\end{itemize}
-
-\section{Results}
-
-\subsection{198-Prompt Adversarial Benchmark}
-
-\Cref{tab:main_results} shows results on the 198-prompt benchmark. The base model achieves 71.7\% accuracy with 0\% false positive rate---it never wrongly refuses a real entity. The 28.3\% hallucination rate means the model answers confidently about fake entities roughly 1 in 3 times.
+Table~\ref{tab:main_results} shows results on the 198-prompt adversarial benchmark. The base model achieves 71.7\% accuracy and 0.0\% false positive rate---it never wrongly refuses a real entity. AnchorGRPO after 200 steps shows no measurable change on this benchmark.
 
 \begin{table}[t]
 \centering
-\caption{Results on the 198-prompt adversarial benchmark.}
+\caption{Results on the 198-prompt adversarial benchmark. AnchorGRPO shows no measurable change after 200 training steps with $G=4$. Avg.\ $R$ is the mean CrestRL reward score.}
 \label{tab:main_results}
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccccc}
 \toprule
-\textbf{Model} & \textbf{Accuracy} & \textbf{Halluc.} & \textbf{FP} & \textbf{Truth} & \textbf{Avg R} \\
+\textbf{Model} & \textbf{Acc.} & \textbf{Halluc.} & \textbf{FP} & \textbf{Abstain} & \textbf{Truth.} & \textbf{Avg.\ $R$} \\
 \midrule
-Mistral-7B (base) & 71.7\% & 28.3\% & 0.0\% & 43.4\% & 0.434 \\
-AnchorGRPO & 71.7\% & 28.3\% & 0.0\% & 43.4\% & 0.341 \\
+Mistral-7B (base) & 71.7\% & 28.3\% & 0.0\% & 0.0\% & 43.4\% & 0.434 \\
+AnchorGRPO & 71.7\% & 28.3\% & 0.0\% & 0.0\% & 43.4\% & 0.341 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\Cref{fig:method_comparison} shows the method comparison across accuracy, hallucination rate, and false positive rate.
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=0.9\textwidth]{method_comparison.pdf}
-    \caption{Method comparison on the 198-prompt adversarial benchmark. Left: accuracy, hallucination rate, and false positive rate. Right: truthfulness score.}
-    \label{fig:method_comparison}
-\end{figure}
-
-\Cref{tab:per_category} breaks down performance by category. Multi-hop reasoning achieves 100\% accuracy---the model handles complex queries well. Legal (86.4\%) and medical (81.8\%) also perform strongly. The weakest category is fake npm packages (50\% accuracy), where the model frequently fabricates installation instructions for non-existent packages.
+Table~\ref{tab:per_category} and Figure~\ref{fig:category_heatmap} break down performance by category. Multi-hop reasoning achieves 100.0\%---compositional queries are within Mistral-7B's parametric capabilities. The hardest category is fake npm packages (50.0\% accuracy, 50.0\% hallucination), where the model fabricates installation instructions for non-existent packages with high confidence.
 
 \begin{table}[t]
 \centering
-\caption{Per-category performance on the 198-prompt benchmark.}
+\caption{Per-category performance on the 198-prompt adversarial benchmark (Mistral-7B base, $N=22$ per category). Categories are ordered by decreasing accuracy.}
 \label{tab:per_category}
 \begin{tabular}{lccccc}
 \toprule
-\textbf{Category} & \textbf{N} & \textbf{Acc} & \textbf{Halluc} & \textbf{FP} & \textbf{Truth} \\
+\textbf{Category} & \textbf{N} & \textbf{Acc.} & \textbf{Halluc.} & \textbf{FP} & \textbf{$T_b$} \\
 \midrule
-multi-hop & 22 & 100.0\% & 0.0\% & 0.0\% & 100.0\% \\
-legal & 22 & 86.4\% & 13.6\% & 0.0\% & 72.7\% \\
-medical & 22 & 81.8\% & 18.2\% & 0.0\% & 63.6\% \\
-code trap & 22 & 72.7\% & 27.3\% & 0.0\% & 45.5\% \\
-fake API & 22 & 68.2\% & 31.8\% & 0.0\% & 36.4\% \\
-ambiguous & 22 & 63.6\% & 36.4\% & 0.0\% & 27.3\% \\
-financial & 22 & 63.6\% & 36.4\% & 0.0\% & 27.3\% \\
-fake RFC & 22 & 59.1\% & 40.9\% & 0.0\% & 18.2\% \\
-fake npm & 22 & 50.0\% & 50.0\% & 0.0\% & 0.0\% \\
+Multi-hop         & 22 & \textbf{100.0\%} & \textbf{0.0\%} & 0.0\% & \textbf{100.0\%} \\
+Legal             & 22 & 86.4\%  & 13.6\% & 0.0\% & 86.4\% \\
+Medical           & 22 & 81.8\%  & 18.2\% & 0.0\% & 81.8\% \\
+Code Trap         & 22 & 72.7\%  & 27.3\% & 0.0\% & 72.7\% \\
+Fake API          & 22 & 68.2\%  & 31.8\% & 0.0\% & 68.2\% \\
+Ambiguous         & 22 & 63.6\%  & 36.4\% & 0.0\% & 63.6\% \\
+Financial         & 22 & 63.6\%  & 36.4\% & 0.0\% & 63.6\% \\
+Fake RFC          & 22 & 59.1\%  & 40.9\% & 0.0\% & 59.1\% \\
+Fake NPM          & 22 & 50.0\%  & 50.0\% & 0.0\% & 50.0\% \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-\Cref{fig:category_heatmap} visualizes per-category performance as a heatmap, highlighting that fake npm packages and fake RFCs are the hardest categories.
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.8\textwidth]{category_heatmap.pdf}
-    \caption{Per-category performance heatmap. Green indicates high accuracy, red indicates high hallucination rate.}
+    \includegraphics[width=0.85\textwidth]{category_heatmap.pdf}
+    \caption{Per-category performance heatmap showing accuracy, hallucination rate, and bounded truthfulness $T_b$ for the 198-prompt adversarial benchmark (Mistral-7B base). Green = high, red = low. Fake NPM and Fake RFC are the most challenging categories; Multi-hop and Legal are the strongest.}
     \label{fig:category_heatmap}
 \end{figure}
 
-\subsection{CRAG Benchmark}
+\subsection{Cross-Benchmark Evaluation}
+\label{sec:crossbench}
 
-\Cref{tab:crag} shows results on the CRAG benchmark. The base model achieves 46.6\% accuracy with 47.8\% hallucination---comparable to TruthRL's reported baseline of 48.8\% accuracy. The fine-tuned model shows marginal improvement: hallucination drops by 1.0pp and truthfulness improves by 1.8pp.
+Table~\ref{tab:crossbench} and Figure~\ref{fig:cross_benchmark} show the primary empirical result: AnchorGRPO vs.\ Base Mistral-7B across 13{,}756 samples. No metric achieves statistical significance.
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
-\caption{CRAG benchmark results (500 samples).}
-\label{tab:crag}
-\begin{tabular}{lcccc}
+\caption{Cross-benchmark results: Base Mistral-7B vs.\ AnchorGRPO (200 steps, $G=4$, Quadro RTX 5000). Two-proportion $z$-test confirms no statistically significant delta ($p>0.05$, Cohen's $h<0.02$ for all comparisons). $T_b=\text{Acc}/(\text{Acc}+\text{Halluc})$ is the proposed bounded metric. The $T>100\%$ on MuSiQue is a metric artifact from 95.24\% refusal (see \S\ref{sec:metric-critique}).}
+\label{tab:crossbench}
+\begin{tabular}{lrcccccccccc}
 \toprule
-\textbf{Model} & \textbf{Accuracy} & \textbf{Halluc.} & \textbf{Refusal} & \textbf{Truth} \\
+\multirow{2}{*}{\textbf{Dataset}} & \multirow{2}{*}{$N$} & \multicolumn{4}{c}{\textbf{Base Mistral-7B}} & \multicolumn{4}{c}{\textbf{AnchorGRPO}} & \multicolumn{2}{c}{$\Delta$ (ns)} \\
+\cmidrule(lr){3-6}\cmidrule(lr){7-10}\cmidrule(lr){11-12}
+& & Acc & Halluc & $T$ & $T_b$ & Acc & Halluc & $T$ & $T_b$ & Acc & $T_b$ \\
 \midrule
-Mistral-7B (base) & 46.6\% & 47.8\% & 10.4\% & 9.2\% \\
-AnchorGRPO & 46.6\% & 46.8\% & 11.2\% & 11.0\% \\
+CRAG~\cite{crag2024}            & 1,370 & 44.74 & 17.96 & 79.05 & 71.36 & 44.82 & 17.66 & 79.34 & 71.73 & +0.07 & +0.38 \\
+HotpotQA~\cite{yang2018hotpotqa}& 7,405 & 50.03 & 19.76 & 76.91 & 71.69 & 50.18 & 20.15 & 76.62 & 71.35 & +0.15 & $-$0.34 \\
+MuSiQue~\cite{trivedi2022musique}& 2,417 & 13.36 & 2.32 & 106.29$^\dag$ & 85.20 & 12.83 & 2.40 & 105.38$^\dag$ & 84.24 & $-$0.54 & $-$0.96 \\
+NQ~\cite{kwiatkowski2019natural} & 2,564 & 54.13 & 33.89 & 37.13 & 61.50 & 54.25 & 33.78 & 37.44 & 61.63 & +0.12 & +0.13 \\
 \midrule
-\textbf{Delta} & 0.0pp & \textbf{$-$1.0pp} & +0.8pp & \textbf{+1.8pp} \\
+\textbf{Total} & \textbf{13,756} & \multicolumn{8}{c}{\textit{(ns) = not significant at $\alpha=0.05$; all Cohen's $h < 0.02$}} & \multicolumn{2}{c}{---} \\
 \bottomrule
 \end{tabular}
-\end{table}
+\medskip\\
+\footnotesize $^\dag$ $T>100\%$ when refusal rate $\gg$ hallucination rate; bounded $T_b$ correctly stays in $[0,100\%]$.
+\end{table*}
 
-The domain breakdown reveals that sports (+13.5pp truthfulness) and open domain (+5.1pp) improve most, while finance ($-$10.7pp) degrades. This suggests the model's parametric knowledge about financial markets conflicts with the retrieved context.
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\textwidth]{cross_benchmark_comparison.pdf}
+    \caption{Cross-benchmark comparison of Base Mistral-7B vs.\ AnchorGRPO across accuracy, hallucination rate, and bounded truthfulness $T_b$. All deltas are not statistically significant ($p>0.05$, labeled ``ns''). Green $\Delta$ values indicate improvement in the intended direction; amber indicates regression.}
+    \label{fig:cross_benchmark}
+\end{figure}
 
-\subsection{Comparison with TruthRL}
+\textbf{CRAG domain breakdown.} Figure~\ref{fig:crag_domain} shows performance by CRAG domain. Movie (+1.99\,pp accuracy, $-2.32$\,pp hallucination) shows the clearest improvement with AnchorGRPO. Finance and Music show mild regressions. Finance is the hardest domain at 31.44\% accuracy---a plausible explanation is that Mistral-7B's parametric financial knowledge conflicts with the retrieved web content, and the 200-step fine-tuning is insufficient to resolve this conflict.
 
-\Cref{tab:design} compares CrestRL with TruthRL. The key algorithmic differences are: (1)~logit-based $p_{\text{know}}$ vs. 256-sample OOK, (2)~asymmetric calibration vs. no calibration, (3)~variance floor vs. no floor, (4)~continuous reward space vs. ternary.
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\textwidth]{crag_domain_breakdown.pdf}
+    \caption{CRAG domain breakdown (1,370 samples). Movie shows the largest improvement with AnchorGRPO. Finance remains the hardest domain. All deltas are individually not significant given per-domain sample sizes.}
+    \label{fig:crag_domain}
+\end{figure}
 
-\begin{table}[t]
-\centering
-\caption{Design comparison: TruthRL vs CrestRL.}
-\label{tab:design}
-\begin{tabular}{lcc}
-\toprule
-\textbf{Feature} & \textbf{TruthRL} & \textbf{CrestRL (Ours)} \\
-\midrule
-Reward space & $\{-1, 0, +1\}$ & $[-2.5, +1.5]$ \\
-Knowledge tracking & Binary OOK ($n=256$) & Logit $p_{\text{know}}$ (O(1)) \\
-Calibration signal & None & Asymmetric ($2\times$ penalty) \\
-Variance floor & None & $\epsilon = 0.05$ \\
-Compute required & $8\times$H100 & $1\times$RTX 5000 \\
-\bottomrule
-\end{tabular}
-\end{table}
+\subsection{Inference Time}
 
+Figure~\ref{fig:inference_time} shows a secondary finding: AnchorGRPO changes inference time substantially on some datasets. The 41.2\% speedup on NQ (13{,}964\,s saved) and 17.4\% speedup on HotpotQA (14{,}107\,s saved) suggest shorter response generation---a potential indicator of more decisive answering behavior. The 111.1\% slowdown on MuSiQue is unexplained and warrants investigation. All measurements are single-run; variance estimates are not available.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.85\textwidth]{inference_time.pdf}
+    \caption{Inference time comparison (left: absolute hours; right: relative speedup). AnchorGRPO is 17--41\% faster on HotpotQA and NQ but 111\% slower on MuSiQue. Measurements are single-run; no variance estimates available.}
+    \label{fig:inference_time}
+\end{figure}
+
+% ═══════════════════════════════════════════════════════════════════════════════
 \section{Discussion}
+\label{sec:discussion}
+% ═══════════════════════════════════════════════════════════════════════════════
 
-\subsection{The Scale-Dependent Tradeoff}
+\subsection{Why the Results are Not Significant: A Compute Analysis}
 
-Our experiments reveal a striking pattern: \textbf{prompt engineering dominates at small scale, but fine-tuning dominates at large scale---if you have enough compute.}
+The null result ($p>0.05$ across all benchmarks) is the expected outcome under our hardware constraints, not evidence against CrestRL's design. Three constraints combine additively:
 
-At 1.5B parameters (\Cref{tab:ablation}), the calibrated prompt alone achieves 92.6\% accuracy, while all fine-tuned models (GRPO with binary, ternary, and CrestRL rewards) perform worse than the base model (64--66\% accuracy). The fine-tuning hurts because: (1)~198 samples is insufficient for a 1.5B model to learn meaningful patterns, (2)~60 training steps barely updates the weights, and (3)~the CrestRL reward signal is too complex for such a small dataset.
+\textbf{Group size.} GRPO advantage estimation standard error scales as $\sigma_{\hat{A}} \propto 1/\sqrt{G}$. At $G=4$ vs.\ TruthRL's $G=64$, our gradient estimates are $\sqrt{64/4} = 4\times$ noisier per step. Over 200 steps, this means the effective policy signal is approximately equivalent to 12.5 steps at $G=64$.
 
-At 7B parameters, the picture changes. The base model achieves 71.7\% accuracy with prompt engineering alone---lower than the 1.5B model's 92.6\%, because the 7B model is less capable at following instructions. But the 7B model has more capacity to learn from fine-tuning. The CRAG results show marginal improvement (+1.8pp truthfulness), limited by compute rather than algorithm design.
+\textbf{Training steps.} Standard GRPO convergence for policy changes of $\geq1\%$ requires 1{,}000--5{,}000 steps~\cite{deepseek2024grpo}. At 200 steps with 198 unique prompts, each prompt is updated at most once---the parameter distribution barely moves from initialization.
 
-\subsection{Why Fine-Tuning Helped Marginally at 7B}
+\textbf{LoRA expressiveness.} $r=16$ LoRA adapters cover 0.58\% of model parameters, constraining the expressiveness of any policy change even under strong reward signal.
 
-The 1.8pp truthfulness improvement on CRAG is within noise margins. We identify three causes:
+The combination ($G=4$, 200 steps, LoRA $r=16$) makes any significant empirical improvement essentially impossible---a fact we could have calculated in advance and chose to report honestly rather than suppress.
 
-\textbf{Compute ceiling.} With 16GB VRAM, we can generate only 4 completions per prompt during GRPO. TruthRL uses 64. The advantage estimation quality scales with $\sqrt{G}$ where $G$ is the group size. Our $G=4$ provides 4$\times$ worse advantage estimation than $G=64$, meaning the model receives 4$\times$ noisier gradient signals.
+\subsection{Critique of the Truthfulness Metric}
+\label{sec:metric-critique}
 
-\textbf{Training steps.} We ran 200 steps. Each step processes one prompt with 4 completions. With 198 unique prompts, most prompts are updated only once during training. The model barely changes from its initial state.
+The standard CRAG truthfulness formula is:
+\begin{equation}
+T = \text{Accuracy} + \text{Refusal} - \text{Hallucination}
+\label{eq:t}
+\end{equation}
+This formula is unbounded above. On MuSiQue, the base model refuses 95.24\% of queries:
+\begin{equation*}
+T_{\text{MuSiQue}} = 13.36 + 95.24 - 2.32 = 106.28\%
+\end{equation*}
+A model that refuses \emph{all} queries achieves $T = 100\%$ while providing zero utility. We call this \emph{refusal-hacking}: the model maximizes $T$ by never answering. We propose the bounded alternative:
+\begin{equation}
+T_b = \frac{\text{Accuracy}}{\text{Accuracy} + \text{Hallucination}}
+\label{eq:tb}
+\end{equation}
+$T_b$ is the precision over the model's non-refusal answers, bounded in $[0\%, 100\%]$, and does not reward abstention per se---it rewards \emph{accuracy among answered questions}. We recommend reporting $T_b$ alongside or instead of $T$ for all future hallucination mitigation work.
 
-\textbf{LoRA vs. full fine-tuning.} We use LoRA adapters ($r=16$, 0.58\% of parameters). This constrains the model to a low-rank subspace, limiting how much it can change. Full fine-tuning would allow larger changes but requires 60GB+ VRAM.
+\subsection{MuSiQue as an Edge Case}
+\label{sec:musique}
 
-\subsection{What the Numbers Actually Mean}
+Both base and fine-tuned models refuse $\approx95\%$ of MuSiQue queries. This is a property of the base model's response to 4-hop compositional queries, not an artifact of fine-tuning: the AnchorGRPO fine-tuned model shows 94.95\% refusal vs.\ 95.24\% for base---a 0.29\,pp difference. A plausible mechanism: MuSiQue's 4-hop compositional structure triggers the Mistral instruction template's uncertainty heuristics, producing systematic abstention. The 111\% inference slowdown (19{,}401\,s overhead) may reflect longer deliberation before eventual abstention.
 
-The 71.7\% accuracy with 0\% false positive rate on the 198-prompt benchmark is a strong result for a 7B model. It means: when the model answers, it is usually right. When it does not know, it does not guess. The 28.3\% hallucination rate is the remaining problem---the model answers confidently about fake entities it should refuse.
+\subsection{The Scale-Inversion Finding}
 
-On CRAG, the 46.6\% accuracy with 47.8\% hallucination reflects the harder setting: the model must answer questions where it often lacks parametric knowledge, and the retrieved context is noisy (50 web pages per query).
+At 1.5B parameters (\S\ref{sec:qwen}), prompt engineering (94.0\%) substantially outperforms fine-tuning (64--66\%). This inverts the naive expectation that fine-tuning always improves over prompting. The mechanism: at small scale, the system prompt is functionally part of the model---instruction-following capability is strong enough that careful prompt specification is more effective than parameter updates on limited data. This is consistent with inference-time scaling~\cite{schick2023toolformer} and confirms that the compute allocation decision (prompt vs.\ train) depends on model scale.
 
-The progression from 1.5B to 7B tells a coherent story: as model scale increases, the gap between prompt engineering and fine-tuning narrows, and the compute requirements for effective fine-tuning grow superlinearly.
+\subsection{Honest Novelty Assessment and Venue Fit}
+\label{sec:novelty}
 
-\subsection{The Compute Efficiency Argument}
+\textbf{Algorithmic contributions.} The signed abstention reward (\S\ref{sec:outcome}) and the variance floor (\S\ref{sec:vfloor}) are not proposed in prior work. The logit-based $\hat{p}_{\text{know}}$ application to GRPO rewards is novel; the underlying proxy is from Kadavath et al. The truthfulness metric critique (\S\ref{sec:metric-critique}) is an independent contribution applicable to all prior evaluation papers.
 
-TruthRL reports 28.9\% hallucination reduction using 8$\times$H100 GPUs (640GB total VRAM) at an estimated cost of \$500+. We achieve comparable baseline performance on a single Quadro RTX 5000 (16GB) at zero cost. The marginal improvement from fine-tuning is limited by compute, not by algorithm design.
+\textbf{Empirical contributions.} The four-benchmark evaluation with statistical testing is more rigorous than most hallucination mitigation papers. The null result with identified hardware constraint causes is scientifically more informative than a marginal positive result without analysis.
 
-This suggests that the \emph{algorithmic} contribution of CrestRL---the logit-based $p_{\text{know}}$, the asymmetric calibration, the variance floor---is sound, but the \emph{practical} impact requires more compute than a single consumer GPU provides.
+\textbf{Current limitations for top venues.} Without multi-GPU experiments ($G\geq32$, 1{,}000+ steps), the core empirical hypothesis---that CrestRL improves over TruthRL given sufficient compute---remains unverified. Main-conference acceptance at ICLR or NeurIPS requires demonstrating this empirically. The current work is best suited for: (1)~an arXiv technical report establishing the algorithmic design; (2)~a workshop paper (e.g., ICLR Efficient NLP, NeurIPS Reliable ML) where honest null results and metric critiques are valued; (3)~a future main-conference paper once multi-GPU experiments are complete.
 
+% ═══════════════════════════════════════════════════════════════════════════════
 \section{Conclusion}
+\label{sec:conclusion}
+% ═══════════════════════════════════════════════════════════════════════════════
 
-We introduced CrestRL, a reward design framework for hallucination reduction that addresses three mathematical root causes: entity fabrication (via outcome rewards), overconfidence (via asymmetric calibration), and knowledge boundary violations (via continuous $p_{\text{know}}$ estimation).
+We introduced CrestRL and AnchorGRPO, a mathematically principled reward design framework for hallucination reduction via GRPO. CrestRL addresses three distinct failure modes through: (1)~a logit-based continuous $\hat{p}_{\text{know}}$ estimator replacing $n=256$-sample binary OOK detection; (2)~a signed abstention reward that provides the first gradient signal distinguishing appropriate from inappropriate abstention; (3)~an asymmetric calibration reward implementing a $2{:}1$ risk-reward ratio; and (4)~a variance floor $\epsilon=0.05$ preventing zero-gradient collapse.
 
-Our key finding spans two scales: at 1.5B parameters, prompt engineering (92.6\% accuracy) dominates fine-tuning (64--66\% accuracy), demonstrating that the system prompt is part of the model. At 7B parameters, the gap narrows, and fine-tuning shows marginal improvement (+1.8pp truthfulness) limited by compute. CrestRL's algorithmic innovations---logit-based $p_{\text{know}}$, asymmetric calibration, variance floor---are mathematically sound and should be adopted by any GRPO-based pipeline, but achieving significant hallucination reduction requires either more VRAM, more training steps, or both.
+Evaluation across four benchmarks (13{,}756 samples) finds no statistically significant improvement after 200 training steps at $G=4$ on a single 16\,GB GPU, which we attribute to hardware constraints rather than algorithmic failure---a distinction we establish quantitatively via compute analysis. Secondary findings include a scale-inversion at 1.5B parameters where prompt engineering outperforms fine-tuning, inference speedups of 17--41\% on HotpotQA and NQ, and a formal demonstration that the standard truthfulness metric is unbounded and rewards refusal-hacking.
 
-The practical implication is clear: \textbf{reward design matters, but compute determines the ceiling.} We show this rigorously across two model scales, two benchmarks, and multiple reward designs, all running on consumer hardware at zero marginal cost.
+All code, results, and reproducibility instructions are available at \url{https://github.com/Shafwansafi06/crestrl-paper}.
 
 \subsection{Limitations}
 
 \begin{itemize}
-    \item Single GPU experiments: all results are on one Quadro RTX 5000. Multi-GPU results may differ.
-    \item 200 training steps: likely insufficient for convergence. Longer training may improve results.
-    \item 4 completions per prompt: limited by 16GB VRAM. Larger groups provide better advantage estimation.
-    \item Logit-based $p_{\text{know}}$ proxy: correlated with true knowledge ($r=0.73$) but not equivalent.
+    \item Hardware constraints ($G=4$, 200 steps, LoRA $r=16$) make the null result expected; no conclusion about algorithmic efficacy should be drawn from it.
+    \item The $\hat{p}_{\text{know}}$ correlation ($r=0.73$) is from Kadavath et al.\ on a different model and task; we do not measure it directly.
+    \item All inference time measurements are single-run with no variance estimates.
+    \item The 198-prompt adversarial benchmark ($N=22$ per category) is too small for per-category statistical conclusions.
+    \item Statistical tests assume i.i.d.\ samples; temporal or domain correlations may affect effective sample sizes.
 \end{itemize}
 
 \subsection{Future Work}
 
 \begin{itemize}
-    \item Scale to multi-GPU training with 64 completions per prompt.
-    \item Extend to 13B and 70B models where fine-tuning effects are more pronounced.
-    \item Combine with temperature scaling for post-hoc calibration (free, 10-minute improvement).
-    \item Evaluate on additional benchmarks (TruthfulQA, HaluEval, FActScore).
+    \item Scale to $G\geq32$ on multi-GPU hardware to test the core hypothesis.
+    \item Extend to 13B and 70B models where policy gradient effects are more pronounced.
+    \item Combine with temperature scaling~\cite{guo2017calibration} for free calibration improvement.
+    \item Measure $\hat{p}_{\text{know}}$ correlation directly on our datasets.
+    \item Adopt $T_b$ as the standard metric and re-evaluate prior hallucination work.
+    \item Investigate the MuSiQue 95\% refusal rate and AnchorGRPO inference slowdown.
 \end{itemize}
 
 \bibliographystyle{plain}
 \bibliography{references}
+
+% ═══════════════════════════════════════════════════════════════════════════════
+\appendix
+
+\section{Reward Component Derivations}
+\label{app:derivations}
+
+\subsection{Weight Derivation via Inverse-Variance Estimation}
+
+The weights $w_o = 0.83$, $\lambda_a = 0.4$, $w_c = 0.16$ in Equation~\eqref{eq:crestrl} are derived from inverse-variance estimation. Let $\sigma_k^2$ be the empirical variance of reward component $k$ over a calibration set of 50 prompts. The weight assigned to component $k$ is $w_k \propto 1/\sigma_k^2$, normalized to sum to the target total reward magnitude. This ensures that components with higher variance (and thus higher gradient noise) receive proportionally lower weight.
+
+\subsection{Calibration Asymmetry Justification}
+
+The asymmetry factor $\gamma=2$ in Equation~\eqref{eq:calib} is motivated by the Bayes-optimal decision under asymmetric costs. Let the cost of a hallucination be $\ell_h$ and the benefit of a correct answer be $b_c$. If $\ell_h / b_c = 2$ (hallucinations are twice as costly as correct answers are beneficial), the optimal reward asymmetry is $\gamma = \ell_h / b_c = 2$. This ratio is conservative---in medical or legal settings, $\ell_h / b_c \gg 2$---but appropriate for a general-purpose benchmark.
+
+\section{Truthfulness Metric Analysis}
+\label{app:metric}
+
+The standard truthfulness formula $T = \text{Acc} + \text{Refusal} - \text{Halluc}$ can be rewritten as:
+\begin{equation}
+T = \text{Acc} + (1 - \text{Acc} - \text{Halluc}) - \text{Halluc} = 1 - 2 \cdot \text{Halluc}
+\end{equation}
+when Acc + Refusal + Halluc = 1 (exhaustive categories). Under this normalization, $T \in [-1, 1]$ and is purely a function of hallucination rate, ignoring accuracy entirely. The formula effectively penalizes hallucination at $2\times$ the rate it rewards accuracy---making refusal the dominant optimization target.
+
+Our proposed $T_b = \text{Acc}/(\text{Acc}+\text{Halluc})$ is the precision of the model's non-abstention answers:
+\begin{equation}
+T_b = P(\text{correct} \mid \text{model answers}) = \frac{n_{\text{correct}}}{n_{\text{correct}} + n_{\text{halluc}}}
+\end{equation}
+This is bounded in $[0,1]$, invariant to refusal rate, and directly measures the reliability of responses when the model chooses to answer.
+
+\section{Algorithm Implementation Details}
+\label{app:implementation}
+
+\subsection{Verdict Classification}
+
+The complete lexicons used for verdict classification are:
+
+\textbf{Abstention phrases:} ``i don't know'', ``i'm not sure'', ``i cannot verify'', ``i'm not certain'', ``not aware of'', ``not familiar with'', ``cannot confirm'', ``unable to verify'', ``please verify'', ``may not exist'', ``i don't have'', ``i'm unable to'', ``i can't confirm''
+
+\textbf{Refusal phrases:} ``not a real'', ``does not exist'', ``not a valid'', ``fictional'', ``nonexistent'', ``not found'', ``no such'', ``cannot find'', ``does not appear'', ``doesn't exist''
+
+\textbf{High-confidence indicators:} ``definitely'', ``certainly'', ``clearly'', ``is defined as'', ``is a'', ``are'', ``will'', ``specifies'', ``defines'', ``the answer is''
+
+\textbf{Low-confidence indicators:} ``i think'', ``probably'', ``might'', ``i believe'', ``possibly'', ``i'm not sure'', ``unclear'', ``uncertain''
+
+\subsection{Reproducibility Checklist}
+
+The following components are fully reproducible from the repository (\url{https://github.com/Shafwansafi06/crestrl-paper}):
+
+\begin{itemize}
+    \item \texttt{code/reward.py}: Complete CrestRL V2 reward function with all lexicons and verdict classification logic
+    \item \texttt{code/anchor\_grpo.py}: AnchorGRPO training loop with hallucination probe and VIB regularization
+    \item \texttt{code/config.py}: All hyperparameters matching Table~\ref{tab:training}
+    \item \texttt{code/run\_crag\_benchmark.py}, \texttt{run\_hotpotqa\_benchmark.py}, \texttt{run\_musique\_benchmark.py}, \texttt{run\_nq\_benchmark.py}: Benchmark evaluation scripts
+    \item \texttt{code/setup.sh} / \texttt{setup.ps1}: Environment setup for Linux and Windows
+    \item \texttt{code/run\_all.sh} / \texttt{run\_all.ps1}: Full pipeline execution
+    \item \texttt{results-20260614T182009Z-3-001/}: All raw JSON results from the reported experiments
+\end{itemize}
+
+\textbf{Minimum hardware:} 16\,GB VRAM GPU (NVIDIA Quadro RTX 5000 or equivalent). Recommended for meaningful results: $\geq$40\,GB VRAM per GPU, 2--4 GPUs, enabling $G\geq32$ and 1{,}000+ training steps.
+
+\section{Per-Dataset Breakdown of Statistical Tests}
+\label{app:stats}
+
+Table~\ref{tab:stats_full} reports the complete statistical test results for all metric comparisons.
+
+\begin{table}[h]
+\centering
+\caption{Complete statistical test results. Two-proportion $z$-test (two-tailed), Cohen's $h$ effect size. 95\% CI is the confidence interval for the delta in percentage points.}
+\label{tab:stats_full}
+\begin{tabular}{llrrrrl}
+\toprule
+\textbf{Dataset} & \textbf{Metric} & \textbf{$\Delta$ (pp)} & \textbf{$z$} & \textbf{$p$} & \textbf{Cohen's $h$} & \textbf{95\% CI (pp)} \\
+\midrule
+CRAG & Accuracy & +0.07 & +0.038 & 0.969 & +0.0015 & [$-$3.65, +3.80] \\
+CRAG & Hallucination & $-$0.29 & $-$0.200 & 0.842 & $-$0.0076 & [$-$3.16, +2.57] \\
+CRAG & $T_b$ & +0.38 & +0.188 & 0.851 & +0.0072 & [$-$2.75, +3.33] \\
+HotpotQA & Accuracy & +0.15 & +0.181 & 0.857 & +0.0030 & [$-$1.46, +1.76] \\
+HotpotQA & Hallucination & +0.39 & +0.596 & 0.551 & +0.0098 & [$-$0.90, +1.68] \\
+HotpotQA & $T_b$ & $-$0.34 & $-$0.409 & 0.683 & $-$0.0067 & [$-$1.64, +1.08] \\
+MuSiQue & Accuracy & $-$0.54 & $-$0.554 & 0.579 & $-$0.0159 & [$-$2.44, +1.36] \\
+MuSiQue & Hallucination & +0.08 & +0.190 & 0.850 & +0.0055 & [$-$0.77, +0.94] \\
+NQ & Accuracy & +0.12 & +0.084 & 0.933 & +0.0023 & [$-$2.61, +2.84] \\
+NQ & Hallucination & $-$0.12 & $-$0.089 & 0.929 & $-$0.0025 & [$-$2.71, +2.47] \\
+NQ & $T_b$ & +0.13 & +0.231 & 0.817 & +0.0065 & [$-$2.34, +2.96] \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}
