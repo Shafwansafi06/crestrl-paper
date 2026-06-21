@@ -134,10 +134,13 @@ def compute_live_reward(
     Called during GRPO training for each generated completion.
     """
     verdict = get_verdict(completion, expected)
-    conf = extract_confidence(completion)
 
-    # p_know from model's own logits — this is the key innovation
+    # p_know from model's own logits — validated r=0.34 on Mistral-7B/NQ
     p_know = compute_p_know_from_logits(model, tokenizer, query, completion, device)
+
+    # ponytail: use p_know as confidence proxy; phrase-based extract_confidence
+    # had r=0.049 vs correctness (noise) and 47% of responses had no signal words.
+    conf = p_know
 
     r_out = outcome_reward(verdict, p_know)
     r_cal = calibration_reward(verdict, conf, lambda_calib)

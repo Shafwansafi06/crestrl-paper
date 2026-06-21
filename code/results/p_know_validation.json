@@ -1,0 +1,655 @@
+{
+  "model": "mistralai/Mistral-7B-Instruct-v0.3",
+  "dataset": "NQ validation",
+  "n_samples": 91,
+  "n_valid": 89,
+  "accuracy": 0.5730337078651685,
+  "pearson_r": 0.3415745449116014,
+  "p_value": 0.0010529793256609749,
+  "ci_95": [
+    0.21357453622744257,
+    0.4598673788945601
+  ],
+  "mean_ppl_correct": 190.35416666666666,
+  "mean_ppl_incorrect": 580.256990131579,
+  "verdict": "PROXY VALID \u2014 use in CrestRL reward",
+  "records": [
+    {
+      "question": "when is the next deadpool movie being released",
+      "gold": "May 18, 2018",
+      "response": "I don't have real-time data. As of my last update, the third Deadpool movie, titled \"Deadpool 3,\" is expected to be released in theaters on September 6, 2024. However, this date is subject to change. For the most accurate and up-to-date information, I recommend checking official sources such as the movie's",
+      "ppl": 4.71875,
+      "correct": false
+    },
+    {
+      "question": "the south west wind blows across nigeria between",
+      "gold": "arrives in central Nigeria in July",
+      "response": "I don't know the specific wind patterns across Nigeria. However, I can tell you that the prevailing winds in West Africa generally blow from the northeast to the southwest, but local winds can vary depending on the time of year and other factors. For more accurate information, I would recommend consulting a meteorological or geographical resource.",
+      "ppl": 2112.0,
+      "correct": false
+    },
+    {
+      "question": "who wrote the first declaration of human rights",
+      "gold": "Cyrus",
+      "response": "The first declaration of human rights is the Declaration of the Rights of Man and of the Citizen, written by the National Assembly of France and adopted on August 26, 1789, during the French Revolution. However, the most widely known and influential declaration of human rights is the Universal Declaration of Human Rights, adopted by the United Nations General Assembly on December 10",
+      "ppl": 1928.0,
+      "correct": false
+    },
+    {
+      "question": "who is the owner of reading football club",
+      "gold": "Dai Yongge",
+      "response": "I don't have real-time data. As of my last update, the owner of Reading Football Club is Dai Yongge, a Chinese businessman, through his company DICE (Reading) Limited. However, ownership can change, so it's best to check the latest information from a reliable source.",
+      "ppl": 8.9375,
+      "correct": true
+    },
+    {
+      "question": "where did the first african american air force unit train",
+      "gold": "Moton Field, the Tuskegee Army Air Field",
+      "response": "The first African American air force unit, the 99th Pursuit Squadron, also known as the Tuskegee Airmen, trained at Tuskegee Army Air Field in Tuskegee, Alabama. They were formed in 1941 as part of the U.S. Army Air Corps. However, it's important to note that their",
+      "ppl": 5.375,
+      "correct": true
+    },
+    {
+      "question": "when is the next scandal episode coming out",
+      "gold": "February 1, 2018",
+      "response": "I don't have real-time information or the ability to predict future events. The release date for the next episode of \"Scandal\" depends on the production schedule of the show, which is not publicly available at this time. You can check the official ABC website or the show's social media accounts for updates.",
+      "ppl": 14.6875,
+      "correct": false
+    },
+    {
+      "question": "when is the last time the philadelphia won the superbowl",
+      "gold": "Super Bowl LII,",
+      "response": "The Philadelphia Eagles last won the Super Bowl in the 2017 season, on February 4, 2018, when they defeated the New England Patriots in Super Bowl LII. The final score was 41-33.",
+      "ppl": 5.625,
+      "correct": true
+    },
+    {
+      "question": "swan lake the sleeping beauty and the nutcracker are three famous ballets by",
+      "gold": "Pyotr Ilyich Tchaikovsky",
+      "response": "Swan Lake, The Sleeping Beauty, and The Nutcracker are famous ballets, but they are not all by the same composer. Swan Lake was composed by Pyotr Ilyich Tchaikovsky, The Sleeping Beauty by Peter Ilich Tchaikovsky, and The Nutcracker by Pyotr Ilyich Tchaikovsky",
+      "ppl": 1.109375,
+      "correct": true
+    },
+    {
+      "question": "how many episodes are there in dragon ball z",
+      "gold": "291",
+      "response": "There are 291 episodes in the original Dragon Ball Z series, not including the movies or the filler episodes. However, if you include the filler episodes, the number can increase significantly. The series aired from April 26, 1989, to January 31, 1996, in Japan.",
+      "ppl": 2.890625,
+      "correct": true
+    },
+    {
+      "question": "what is the first step in the evolution of the eye",
+      "gold": "photoreceptor proteins that sense light",
+      "response": "The first step in the evolution of the eye is not well-documented due to the lack of fossil evidence, but a popular theory is the development of light-sensitive spots on the skin or inner linings of early aquatic organisms. These spots, known as photoreceptor cells, could detect light and dark, potentially leading to the development of more complex light-sensing structures",
+      "ppl": 61.75,
+      "correct": true
+    },
+    {
+      "question": "where is gall bladder situated in human body",
+      "gold": "beneath the liver",
+      "response": "The gallbladder is located in the upper right quadrant of the abdomen, just beneath the liver, which is on the right side of the body. It's a small, pear-shaped organ that stores and concentrates bile, a digestive fluid produced by the liver. The bile is then released into the small intestine to aid in the digestion of",
+      "ppl": 174.0,
+      "correct": true
+    },
+    {
+      "question": "what is the main mineral in lithium batteries",
+      "gold": "lithium",
+      "response": "The main inorganic compound in lithium-ion batteries is lithium cobalt oxide (LiCoO2) or lithium manganese oxide (LiMn2O4) for the cathode, and carbon for the anode. However, the \"main mineral\" in a broad sense is not applicable here, as these materials are not",
+      "ppl": 4.625,
+      "correct": true
+    },
+    {
+      "question": "who is the president of usa right now",
+      "gold": "Donald Trump",
+      "response": "I don't have real-time data. As of my last update, the President of the United States is Joe Biden. However, for the most accurate and up-to-date information, I recommend checking a reliable news source.",
+      "ppl": 216.0,
+      "correct": false
+    },
+    {
+      "question": "who died in the plane crash greys anatomy",
+      "gold": "Lexie",
+      "response": "In the television series \"Grey's Anatomy,\" the character Derek Shepherd (played by Patrick Dempsey) dies in a car accident, not a plane crash. However, there is a plane crash in the show that results in the death of several characters, including Mark Sloan (Eric Dane) and Lexie Grey (Chyler Leigh",
+      "ppl": 230.0,
+      "correct": true
+    },
+    {
+      "question": "where do they grow hops in the us",
+      "gold": "the Yakima (Washington) and Willamette (Oregon) valleys",
+      "response": "Hops are primarily grown in the Pacific Northwest region of the United States, particularly in states like Washington, Oregon, Idaho, and California. However, other states such as New York, Minnesota, Vermont, and Michigan also have significant hop-growing regions.",
+      "ppl": 6.375,
+      "correct": false
+    },
+    {
+      "question": "where was the music video what ifs filmed",
+      "gold": "along the Californian coast at The Inn at Newport Ranch, a resort and cattle ranch to the north of San Francisco",
+      "response": "I don't have real-time data or the ability to browse the internet to find specific details about music videos. The music video \"What Ifs\" was released by singer-songwriter and actress Evan Rachel Wood in 2017, but I don't have information about where it was filmed. To find that information, you can look up the music video",
+      "ppl": 16.875,
+      "correct": false
+    },
+    {
+      "question": "panda is a national animal of which country",
+      "gold": "China",
+      "response": "The panda is a symbol of China, not the national animal per se, but it is closely associated with China's cultural identity. The giant panda is native to south central China.",
+      "ppl": 7.375,
+      "correct": true
+    },
+    {
+      "question": "how many countries are a part of opec",
+      "gold": "14",
+      "response": "As of my last update, there are 13 countries that are part of OPEC (Organization of the Petroleum Exporting Countries). They are: Algeria, Angola, Ecuador, Iran, Iraq, Kuwait, Libya, Nigeria, Qatar, Saudi Arabia, United Arab Emirates, Venezuela, and Gabon (which joined in",
+      "ppl": 2.71875,
+      "correct": false
+    },
+    {
+      "question": "where are the coastal plains of india situated",
+      "gold": "between the Eastern Ghats and the Bay of Bengal",
+      "response": "The coastal plains of India are primarily situated along the eastern and western coasts. The eastern coast, also known as the Bay of Bengal coast, includes states like West Bengal, Odisha, Andhra Pradesh, Tamil Nadu, and Puducherry. The western coast, also known as the Arabian Sea coast, includes the states of Gujarat, Mah",
+      "ppl": 11.4375,
+      "correct": true
+    },
+    {
+      "question": "what is the name of manchester united stadium",
+      "gold": "Old Trafford",
+      "response": "The name of Manchester United's stadium is Old Trafford Stadium. It is located in Trafford, Greater Manchester, England.",
+      "ppl": 1.0703125,
+      "correct": true
+    },
+    {
+      "question": "who sings the theme song for the proud family",
+      "gold": "Destiny's Child",
+      "response": "The theme song for \"The Proud Family\" is called \"That's What I'm Talking About\" and it was performed by R&B singer Solange Knowles, the younger sister of Beyonc\u00e9. The song was released as a single in 2001 and was featured in the animated television series \"The Proud Family\" which aired from 20",
+      "ppl": 9.8125,
+      "correct": false
+    },
+    {
+      "question": "who wrote cant get you out of my head lyrics",
+      "gold": "Cathy Dennis and Rob Davis",
+      "response": "The lyrics for the song \"Can't Get You Out of My Head\" were written by Calvin Harris and Kelis, with additional writing credits to Cathy Dennis and Steve Mac. However, the song is most famously associated with Kylie Minogue, who performed it.",
+      "ppl": 4.59375,
+      "correct": true
+    },
+    {
+      "question": "who is rose in the fall season 2",
+      "gold": "a woman who had a sexual relationship with Paul whilst at university",
+      "response": "In the television series \"Grey's Anatomy,\" Season 2, the character Rose is played by actress Sara Ramirez. She is a surgical intern who is initially in a relationship with George O'Malley. However, the character Rose is not specifically associated with the fall season in the show's timeline. The events of Season 2 span from late winter to",
+      "ppl": 115.5,
+      "correct": false
+    },
+    {
+      "question": "where does the story the great gatsby take place",
+      "gold": "the fictional town of West Egg on prosperous Long Island",
+      "response": "The story \"The Great Gatsby\" takes place in Long Island, New York, during the summer of 1922. Specifically, it is set in the towns of West Egg and East Egg, as well as the city of New York. The novel is set in the context of the Jazz Age, a period of time in the 1920s characterized",
+      "ppl": 7.5,
+      "correct": true
+    },
+    {
+      "question": "when did the dallas cowboys win their last playoff game",
+      "gold": "2014",
+      "response": "The Dallas Cowboys last won a playoff game in the 2018-2019 NFL season, on January 5, 2019, against the Seattle Seahawks. The final score was 24-22.",
+      "ppl": 18.0,
+      "correct": false
+    },
+    {
+      "question": "who turned out to be the mother on how i met your mother",
+      "gold": "Tracy McConnell",
+      "response": "The mother on How I Met Your Mother is revealed to be Tracy McConnell (played by Cristin Milioti), not Ted Mosby's wife, Stella (played by Sarah Chalke or Blanche Brown, played by Bryce Dallas Howard). The reveal happens in the series finale, and the story is told through flashbacks.",
+      "ppl": 2.296875,
+      "correct": true
+    },
+    {
+      "question": "who took over for batman when his back was broken",
+      "gold": "Jean-Paul Valley (a.k.a. Azrael)",
+      "response": "After Batman's back was broken in the storyline \"Knightfall,\" Jean-Paul Valley, also known as Azrael, took over as Batman for a time. However, it was Bruce Wayne's prot\u00e9g\u00e9, Dick Grayson, who eventually became the new Batman, taking on the mantle as Nightwing before his return. This period is often referred to",
+      "ppl": 1.6796875,
+      "correct": true
+    },
+    {
+      "question": "what is the corporate tax rate in great britain",
+      "gold": "a flat rate of 20%",
+      "response": "The corporate tax rate in the United Kingdom is 19% for most companies, as of the tax year 2021/2022. However, smaller companies with profits under \u00a31.5 million are eligible for a lower rate of 19% on their first \u00a3300,000 of profits, and 25% on the remaining balance.",
+      "ppl": 33.75,
+      "correct": true
+    },
+    {
+      "question": "what network is showing the monday night football game",
+      "gold": "ESPN",
+      "response": "I don't have real-time data. As of the 2021 season, ESPN typically broadcasts Monday Night Football games. However, for the most current information, I recommend checking the official NFL or ESPN websites or consulting a reliable sports news source.",
+      "ppl": 4.15625,
+      "correct": true
+    },
+    {
+      "question": "what was the city of beijing previously known as",
+      "gold": "Peking",
+      "response": "The city of Beijing was previously known as Peking. This name change occurred during the Qing dynasty, and it was changed back to Beijing during the Republic of China era.",
+      "ppl": 2.546875,
+      "correct": true
+    },
+    {
+      "question": "where is republic of doyle supposed to take place",
+      "gold": "St. John's, Newfoundland and Labrador",
+      "response": "I don't know. The Republic of Doyle is a fictional television series set in Northern Ireland, specifically in Belfast. However, there is no real-world country named Republic of Doyle.",
+      "ppl": 4.3125,
+      "correct": false
+    },
+    {
+      "question": "who will take the throne after the queen dies",
+      "gold": "Charles, Prince of Wales",
+      "response": "I don't have real-time knowledge or the ability to predict future events. The succession to the throne of a specific monarchy depends on the laws and traditions of that particular country. For example, in the British monarchy, the line of succession is determined by the order of birth, with males taking precedence over females, unless the potential heir is a female who is the",
+      "ppl": 16.875,
+      "correct": false
+    },
+    {
+      "question": "who is the girl in green day 21 guns",
+      "gold": "Lisa Stelly",
+      "response": "I don't have specific knowledge about the music video for Green Day's \"21 Guns.\" The girl in the video is not identified by name. However, she is portrayed by actress and model, Emily Haines, who is the lead vocalist and keyboardist of the band Metric. She is known for her appearance in the music video.",
+      "ppl": 9152.0,
+      "correct": false
+    },
+    {
+      "question": "what are the zords in the power rangers movie",
+      "gold": "animal-themed Ninja Zords",
+      "response": "The Power Rangers movie, specifically the 2017 reboot titled \"Power Rangers,\" features a unique set of Zords. Here are the names of the Zords and their corresponding Rangers:\n\n1. Alpha-1 Tank Zord (Jason Scott/Red Ranger)\n2. Pterodactyl Zord (Kimberly Hart/Pink R",
+      "ppl": 105.0,
+      "correct": true
+    },
+    {
+      "question": "name the process of fusion of an egg with a sperm",
+      "gold": "fertilization",
+      "response": "The process you're referring to is called fertilization. In fertilization, a sperm cell fuses with an egg cell (ovum) to form a single cell called a zygote. This process typically occurs in the fallopian tube during sexual reproduction. However, it's important to note that this process is crucial for the formation of a new individual, but",
+      "ppl": 2.15625,
+      "correct": true
+    },
+    {
+      "question": "where is the national championship for college football played",
+      "gold": "Mercedes-Benz Stadium in Atlanta, Georgia on January 8, 2018",
+      "response": "The National Championship for college football is played in the College Football Playoff (CFP) National Championship game. The location rotates among various cities with stadiums that meet the necessary criteria. The game is typically played in early January. Some of the recent locations include Miami Gardens, Florida (Hard Rock Stadium), Glendale, Arizona (State Farm Stadium), and New Orleans, Louisiana (Mer",
+      "ppl": 3.296875,
+      "correct": false
+    },
+    {
+      "question": "the vascular layer of the eye is the",
+      "gold": "The uvea",
+      "response": "The vascular layer of the eye is the uvea or uveal tract. It consists of the iris, ciliary body, and choroid. The uvea provides nutrients to the eye and helps regulate the shape of the eye for focusing. It also contains blood vessels, which give the uvea its pigmented color.",
+      "ppl": 11.4375,
+      "correct": true
+    },
+    {
+      "question": "who has won the mens singles title in the australian open tennis tournament",
+      "gold": "Roger Federer",
+      "response": "The winner of the Men's Singles title in the Australian Open Tennis Tournament varies each year. To provide a specific example, the 2021 Australian Open Men's Singles title was won by Novak Djokovic. However, for the most up-to-date information, I would recommend checking the official Australian Open website or a reliable sports news source.",
+      "ppl": 2.703125,
+      "correct": false
+    },
+    {
+      "question": "who has been ranked no. 1 in the latest football rankings announced by fifa",
+      "gold": "Germany",
+      "response": "I don't have real-time data. As of the last update I have, the FIFA World Rankings as of February 2022 have Belgium in the first position, followed by France and Brazil. However, for the most current rankings, I would recommend checking the official FIFA website or a reliable sports news source.",
+      "ppl": 22016.0,
+      "correct": false
+    },
+    {
+      "question": "who wrote the song the glory of love",
+      "gold": "Billy Hill",
+      "response": "The song \"Glory of Love\" was written by Billy Hill. However, it gained significant popularity when it was covered by various artists, including Benny Goodman, Peter Gabriel, and most notably, the band, The Monkees, with their version reaching the top of the charts in 1960.",
+      "ppl": 41.25,
+      "correct": true
+    },
+    {
+      "question": "where does the brain get its energy from",
+      "gold": "most of its energy from oxygen-dependent metabolism of glucose (i.e., blood sugar),[73] but ketones provide a major alternative source, together with contributions from medium chain fatty acids (caprylic[78] and heptanoic[79] acids), lactate,[80] acetate,[81] and possibly amino acids",
+      "response": "The brain primarily obtains its energy from glucose, a type of sugar. This glucose is derived from the breakdown of carbohydrates in food, which is then transported to the brain through the bloodstream. The process of converting glucose into energy is facilitated by a molecule called ATP (adenosine triphosphate).",
+      "ppl": 8.5,
+      "correct": false
+    },
+    {
+      "question": "who wrote the book the origin of species",
+      "gold": "Charles Darwin",
+      "response": "Charles Darwin wrote the book \"The Origin of Species\". He published it in 1859.",
+      "ppl": 1.2109375,
+      "correct": true
+    },
+    {
+      "question": "who sang rip it up and start again",
+      "gold": "Orange Juice",
+      "response": "The song \"Rip It Up and Start Again\" is not a widely known single with a specific artist. However, there is a song with a similar title by Arctic Monkeys, but it's not the one you're referring to. The song you might be thinking of is \"Rip It Up\" by Gene, a UK band from the 1980s.",
+      "ppl": 168.0,
+      "correct": false
+    },
+    {
+      "question": "where are the winter olympics and when do they start",
+      "gold": "Pyeongchang County, South Korea",
+      "response": "The Winter Olympics are typically held every four years, and the next Winter Olympics, officially known as the XXIV Olympic Winter Games, will take place in Beijing, China, starting on February 4, 2022. However, it's important to note that the Olympic schedule can sometimes be affected by various factors, so it's always a good idea to check the latest updates for",
+      "ppl": 10.4375,
+      "correct": false
+    },
+    {
+      "question": "when does the miz and maryse show start",
+      "gold": "2018",
+      "response": "I don't have real-time data or a specific schedule. The Miz and Maryse are WWE personalities, and their appearances on WWE programming can vary. To get the most accurate and up-to-date information, I recommend checking the WWE's official website or social media channels.",
+      "ppl": 37.5,
+      "correct": false
+    },
+    {
+      "question": "where was the first season of slasher filmed",
+      "gold": "Orangeville, Ontario, Canada",
+      "response": "I don't have real-time data or specific knowledge about the filming locations of every movie or TV show. However, I can tell you that the first season of the TV series \"Slasher\" was filmed in Toronto, Ontario, Canada. The show is known for its Canadian production.",
+      "ppl": 23.5,
+      "correct": true
+    },
+    {
+      "question": "who said if a tree falls in the woods and nobody hears it",
+      "gold": "Charles Riborg Mann",
+      "response": "The quote \"If a tree falls in a forest and no one is around to hear it, does it make a sound?\" is a philosophical question attributed to the philosopher Ren\u00e9 Descartes, but it was popularized by the physicist Richard Feynman. However, it's important to note that neither Descartes nor Feynman originally posed the question in this",
+      "ppl": 197.0,
+      "correct": false
+    },
+    {
+      "question": "what is the point of a menstrual cup",
+      "gold": "to collect menstrual flow",
+      "response": "A menstrual cup is a type of reusable feminine hygiene product designed to collect menstrual fluid within a flexible silicone or rubber cup, rather than absorbing it like traditional tampons or pads. The main benefits of using a menstrual cup include reducing waste, saving money in the long run, and potentially lasting longer than other period products. It is",
+      "ppl": 9.0625,
+      "correct": true
+    },
+    {
+      "question": "a bond that the issuer has the right to pay off before its maturity date",
+      "gold": "callable",
+      "response": "The bond you are referring to is known as a Callable Bond. This type of bond gives the issuer the option to repay the bond before its maturity date, usually under certain conditions, such as a favorable interest rate environment. This can potentially be beneficial to the issuer but less so to the bondholder, as they may miss out on potential higher returns if interest rates drop significantly",
+      "ppl": 10.125,
+      "correct": true
+    },
+    {
+      "question": "when did united states enter world war i",
+      "gold": "April 1917",
+      "response": "The United States entered World War I on April 6, 1917. This was after more than two and a half years of the war being fought primarily in Europe, following the assassination of Archduke Franz Ferdinand of Austria-Hungary in June 1914. The U.S. initially remained neutral, but growing public sentiment, coupled with unrestr",
+      "ppl": 4.46875,
+      "correct": true
+    },
+    {
+      "question": "who has given the theory of unbalanced economic growth",
+      "gold": "Hirschman",
+      "response": "The theory of unbalanced economic growth is not attributed to a specific individual as it is a concept that encompasses various theories and perspectives. However, some economists who have contributed significantly to the understanding of economic growth imbalance include Paul Romer, Robert Solow, and W. Arthur Lewis, among others. Romer's endogenous growth theory and Solow's ne",
+      "ppl": 40.5,
+      "correct": false
+    },
+    {
+      "question": "when did disney art of animation resort open",
+      "gold": "May 31, 2012",
+      "response": "The Disney's Art of Animation Resort opened on May 31, 2012.",
+      "ppl": 2.3125,
+      "correct": true
+    },
+    {
+      "question": "the seed of a gymnosperm seed is made in the",
+      "gold": "either on the surface of scales or leaves",
+      "response": "In a gymnosperm, the seed is not enclosed within an ovule, as is the case with angiosperms. Instead, the seeds are produced naked or borne on the surface of the ovuliferous scales or leaves. So, the seed is formed on the ovule, which is not enclosed in an ovary, as in angiosperms. This is",
+      "ppl": 43.25,
+      "correct": true
+    },
+    {
+      "question": "where would a subcutaneous injection be made in the skin",
+      "gold": "into the subcutis,[1] the layer of skin directly below the dermis and epidermis",
+      "response": "A subcutaneous injection is typically administered into the loose connective tissue layer beneath the skin, but above the muscle. Common sites for subcutaneous injections include the upper arm, abdomen, outer thigh, and the upper buttocks. It's important to avoid areas with visible veins and to rotate injection sites to prevent tissue damage. Always consult a healthcare professional for proper",
+      "ppl": 14.0,
+      "correct": false
+    },
+    {
+      "question": "where are most nutrients absorbed in the human digestive tract",
+      "gold": "The small intestine or small bowel",
+      "response": "Most nutrients are absorbed in the small intestine, particularly in the duodenum, jejunum, and ileum. This is due to the large surface area provided by the villi and microvilli in these regions, which increase the absorption surface area. The small intestine is the primary site for the absorption of carbohydrates, proteins,",
+      "ppl": 5.09375,
+      "correct": true
+    },
+    {
+      "question": "where does kevins family go in home alone 2",
+      "gold": "Florida",
+      "response": "In \"Home Alone 2: Lost in New York,\" Kevin's family goes to New York City for a vacation. Kevin, however, gets separated from them and has more adventures in the Big Apple.",
+      "ppl": 3824.0,
+      "correct": false
+    },
+    {
+      "question": "when is season 2 of jessica jones being released",
+      "gold": "March 8, 2018",
+      "response": "I don't know. As of my last update, there has been no official announcement about the release date for Season 2 of Jessica Jones. The series was last released in 2018, and there has been no new information about a potential Season 3. For the most accurate and up-to-date information, I recommend checking the official Marvel or Netflix websites or social media",
+      "ppl": 4.625,
+      "correct": true
+    },
+    {
+      "question": "who is the most losing team in nfl history",
+      "gold": "Arizona Cardinals",
+      "response": "The team with the most losses in NFL history is the Tampa Bay Buccaneers, who have had a total of 676 losses since their inception in 1976. However, it's important to note that this number includes regular season, postseason, and preseason games. If we're only considering regular season games, the Cleveland Browns and the",
+      "ppl": 60.0,
+      "correct": false
+    },
+    {
+      "question": "what is the payout for the texas bowl",
+      "gold": "US$3 million per team",
+      "response": "I don't have real-time data. As of my last update, the payout for the Texas Bowl varies each year and is determined by the contract between the bowl committee and the conferences that participate. It's usually a combination of a fixed amount for each team and additional revenue sharing based on ticket sales, television rights, and sponsorships. For specific amounts, I would recommend",
+      "ppl": 43.25,
+      "correct": true
+    },
+    {
+      "question": "what are the top five wine producing states",
+      "gold": "California",
+      "response": "The top five wine-producing states in the United States, based on total production, are:\n\n1. California: Known as the \"Golden State,\" California is the largest wine producer in the U.S., with over 90% of the country's wine coming from this state. Major wine regions include Napa Valley, Sonoma County, and Central Coast",
+      "ppl": 6.28125,
+      "correct": true
+    },
+    {
+      "question": "what is final season of game of thrones",
+      "gold": "the eighth season",
+      "response": "The final season of Game of Thrones is Season 8. It aired from April 14, 2019, to May 19, 2019, with a total of 6 episodes.",
+      "ppl": 5.4375,
+      "correct": true
+    },
+    {
+      "question": "vikram samvat calender is official in which country",
+      "gold": "Nepal",
+      "response": "The Vikram Samvat calendar is officially used in India. It is a lunisolar calendar that is used alongside the Gregorian calendar in various parts of India. It is also used in Fiji, Guyana, Mauritius, Nepal, and Suriname.",
+      "ppl": 17.5,
+      "correct": true
+    },
+    {
+      "question": "who wrote there's a guy works down the chip shop lyrics",
+      "gold": "Kirsty MacColl",
+      "response": "The lyrics \"There's a guy works down the chip shop swears he's Elvis\" are from the song \"Eleanor Rigby\" by The Beatles. However, it's important to note that this line is not actually about a person who wrote the lyrics, but rather a part of the song's narrative. The song was written by John Lennon",
+      "ppl": 3.953125,
+      "correct": false
+    },
+    {
+      "question": "an edge that is between a vertex and itself is a",
+      "gold": "loop (also called a self-loop or a \"buckle\")",
+      "response": "In graph theory, an edge that connects a vertex to itself is not considered a loop or a self-loop. A self-loop is an edge that connects a vertex to itself within the same node. If an edge connects a vertex to itself, it is not considered an edge in the graph. However, some graph types, such as pseudographs, do allow loops as edges",
+      "ppl": 12.375,
+      "correct": true
+    },
+    {
+      "question": "when does the little couples new season start",
+      "gold": "September 19, 2017",
+      "response": "I don't have real-time information. The release date for the new season of \"Little Couple\" is not currently known. I recommend checking the TLC network's official website or social media channels for updates on the show's release schedule.",
+      "ppl": 10.125,
+      "correct": false
+    },
+    {
+      "question": "when does bloom find out who she is",
+      "gold": "Addio Magix!\"  / \"The Font of Dragon Fire",
+      "response": "In the movie \"Snowpiercer\", the character Bloom's identity is gradually revealed throughout the story. However, the exact moment when she discovers her true identity is not explicitly shown in the film. It is hinted that she might be a clone of another character, but the confirmation is left ambiguous.",
+      "ppl": 2976.0,
+      "correct": false
+    },
+    {
+      "question": "how tall is the actor who plays hagrid in harry potter",
+      "gold": "6ft 1in",
+      "response": "The actor who plays Hagrid in the Harry Potter series is Robbie Coltrane. He is approximately 6 feet 9 inches (201 cm) tall. However, in the films, Hagrid is portrayed as even taller due to camera angles and costuming.",
+      "ppl": 32.5,
+      "correct": false
+    },
+    {
+      "question": "what is the job of justice of the peace",
+      "gold": "a judicial officer, of a lower or puisne court, elected or appointed by means of a commission (letters patent) to keep the peace.",
+      "response": "A Justice of the Peace (JP) is a public official who has the power to perform various administrative and legal duties in a civil law system, particularly in common law jurisdictions. Their roles can vary, but they often perform duties such as:\n\n1. Solemnizing marriages\n2. Witnessing and authenticating documents\n3. Administering oaths",
+      "ppl": 16.875,
+      "correct": false
+    },
+    {
+      "question": "who has trained the most melbourne cup winners",
+      "gold": "Bart Cummings",
+      "response": "I don't have real-time data or the ability to continuously update my knowledge base. However, as of the 2019 Melbourne Cup, the trainer with the most wins is Bart Cummings, who trained 12 Melbourne Cup winners. This information may have changed since then, as new races are held each year. For the most accurate and up-to-date information",
+      "ppl": 1.078125,
+      "correct": true
+    },
+    {
+      "question": "what is the cross on a letter t called",
+      "gold": "crossbar",
+      "response": "The cross on a letter 'T' is called a crossbar.",
+      "ppl": 9.625,
+      "correct": true
+    },
+    {
+      "question": "who plays the evil doctor in wonder woman",
+      "gold": "Elena Anaya",
+      "response": "I don't know. The character of the evil doctor in \"Wonder Woman\" varies depending on the specific storyline. In the original comic books, there is no consistent \"evil doctor\" character. However, in the live-action films, the character of Dr. Poison was portrayed by Elena Anaya in \"Wonder Woman\" (2017) and",
+      "ppl": 3.390625,
+      "correct": true
+    },
+    {
+      "question": "who starred in the movie summer of 42",
+      "gold": "Gary Grimes",
+      "response": "The movie \"Summer of '42\" stars Gary Grimes, Jennifer O'Neill, and Oliver Conant. However, the most notable performance is by the young actor, Olivere Hart, who played the role of Hermie. The film was directed by Robert Mulligan and released in 1971.",
+      "ppl": 28.75,
+      "correct": true
+    },
+    {
+      "question": "what album is sacrifice by elton john on",
+      "gold": "Sleeping with the Past",
+      "response": "The song \"Sacrifice\" is not on any of Elton John's studio albums. However, it appears on the compilation album \"Elton John's Greatest Hits Volume 3\" (1979). It was also released as a single in 1976.",
+      "ppl": 7.0625,
+      "correct": false
+    },
+    {
+      "question": "where can you find dna in the body",
+      "gold": "inside the cell nucleus",
+      "response": "DNA (Deoxyribonucleic acid) is found primarily in the nucleus of most cells in the body, including all cells of the human body except for red blood cells. It is the hereditary material in humans and almost all organisms. It is structured in a double helix and carries the genetic instructions used in the growth, development, functioning, and reproduction of all",
+      "ppl": 29.25,
+      "correct": true
+    },
+    {
+      "question": "what is the final season of downton abbey",
+      "gold": "six",
+      "response": "The final season of Downton Abbey is Season 6. It aired from September 2015 to December 2015. However, there was a movie released in 2019 that served as a continuation of the series.",
+      "ppl": 87040.0,
+      "correct": false
+    },
+    {
+      "question": "which site of an enzyme is called allosteric site",
+      "gold": "regulatory site",
+      "response": "The allosteric site, also known as the regulatory site, is a region on an enzyme that does not directly participate in the catalytic process but can bind with effector molecules, which can change the shape of the enzyme and affect its catalytic activity. This is different from the active site, which is the region where the substrate binds and the chemical",
+      "ppl": 8640.0,
+      "correct": true
+    },
+    {
+      "question": "when will the next episode of my next guest needs no introduction",
+      "gold": "May 31, 2018",
+      "response": "I don't have real-time information or a personal schedule. To find out when the next episode of \"My Next Guest Needs No Introduction\" will air, I recommend checking the official show's website, social media channels, or streaming service (Netflix) for updates.",
+      "ppl": 12.75,
+      "correct": false
+    },
+    {
+      "question": "where was the original flight of the phoenix filmed",
+      "gold": "20th Century-Fox Studios",
+      "response": "I don't have specific information about the filming locations of \"The Original Flight of the Phoenix,\" but it was a 1966 American disaster film directed by Robert Aldrich. The film was based on a novel by Elleston Trevor, and it starred James Stewart, Richard Attenborough, and Peter Finch. The story is set in the Sahara Des",
+      "ppl": 13.375,
+      "correct": false
+    },
+    {
+      "question": "when did the name of bombay change to mumbai",
+      "gold": "1995",
+      "response": "The name of Bombay changed to Mumbai on March 1, 1995. This change was made by an official government resolution, and it was a part of a larger movement to adopt Marathi names for cities in Maharashtra. The city was named Mumbai, which is derived from the local Kannada name of the goddess Mumba",
+      "ppl": 3.359375,
+      "correct": true
+    },
+    {
+      "question": "who plays matthew on anne with an e",
+      "gold": "R. H. Thomson",
+      "response": "The character of Matthew Cuthbert is played by R.H. Thomson in the television series \"Anne with an E\".",
+      "ppl": 2.875,
+      "correct": true
+    },
+    {
+      "question": "who wrote song what a friend we have in jesus",
+      "gold": "Joseph M. Scriven",
+      "response": "The song \"What a Friend We Have in Jesus\" was written by Joseph Scriven in 1855. However, it was later revised by Charles Crozer Converse in 1868.",
+      "ppl": 2.34375,
+      "correct": true
+    },
+    {
+      "question": "what is bermuda competing in the winter olympics",
+      "gold": "Cross-country skiing",
+      "response": "Bermuda does not participate in the Winter Olympics. Bermuda is a tropical island in the North Atlantic Ocean and does not have the necessary winter sports infrastructure or climate to train for winter sports. It only participates in the Summer Olympics.",
+      "ppl": 30.625,
+      "correct": false
+    },
+    {
+      "question": "who is the guy who walked across the twin towers",
+      "gold": "Philippe Petit",
+      "response": "I don't know. There have been numerous people who have climbed the Twin Towers, but there was no person who walked across the towers as they were not designed for pedestrian traffic. The most famous instance is the tightrope walk performed by Philippe Petit between the Twin Towers in 1974. However, he did not walk across the towers,",
+      "ppl": 9.9375,
+      "correct": true
+    },
+    {
+      "question": "where do the royalties for winnie the pooh go",
+      "gold": "Slesinger, Inc.",
+      "response": "Royalties for Winnie the Pooh, a character created by A.A. Milne, are typically collected by the Milne family or their representatives, as the copyright for the original stories and illustrations is owned by them. However, the Disney company owns the rights to the animated and merchandising versions of Winnie the Pooh, and they receive royalties from those",
+      "ppl": 880.0,
+      "correct": false
+    },
+    {
+      "question": "all the motor neurons that control the skeletal muscles are",
+      "gold": "Somatic",
+      "response": "Motor neurons that control the skeletal muscles are called lower motor neurons. These neurons originate in the brain or spinal cord and send signals to the muscles to cause them to contract, resulting in movement. They are further divided into upper motor neurons, which originate in the brain (specifically in the motor cortex, basal ganglia, or cerebellum),",
+      "ppl": 41.25,
+      "correct": false
+    },
+    {
+      "question": "genre of diary of a wimpy kid the getaway",
+      "gold": "Children's novel",
+      "response": "The genre of \"Diary of a Wimpy Kid: The Getaway\" is Humor/Comedy, as it is a part of the Diary of a Wimpy Kid series, which is known for its light-hearted, humorous approach to storytelling. It can also be classified as Children's Literature or Young Adult Fiction due to its target audience",
+      "ppl": 27.875,
+      "correct": true
+    },
+    {
+      "question": "total number of mna in pakistan national assembly",
+      "gold": "332",
+      "response": "I don't have real-time data. As of the last general election in 2018, the National Assembly of Pakistan has 342 seats. However, the number may have changed since then due to by-elections or other reasons. For the most accurate and up-to-date information, I would recommend checking the official website of the Parliament of Pakistan or a",
+      "ppl": 32.5,
+      "correct": false
+    },
+    {
+      "question": "when are centrally acting skeletal muscle relaxants used",
+      "gold": "to alleviate musculoskeletal pain and spasms and to reduce spasticity in a variety of neurological conditions",
+      "response": "Centrally acting skeletal muscle relaxants are typically used to treat muscle spasms, muscle stiffness, and muscle pain that are associated with disorders such as musculoskeletal conditions (like back pain, neck pain, or strains), multiple sclerosis, or spinal cord injuries. They work by blocking pain sensations sent to the brain and affecting certain areas",
+      "ppl": 5.09375,
+      "correct": true
+    },
+    {
+      "question": "who played stumpy in the movie rio bravo",
+      "gold": "Walter Brennan",
+      "response": "Stumpy is a character in the movie Rio Bravo, but he is not a main character. The character is played by John Dierkes. However, it's important to note that John Dierkes played several minor roles in the film, and Stumpy is one of them. The main characters are played by John Wayne, Dean Martin, Ricky Nelson, and Walter Brennan.",
+      "ppl": 1.9296875,
+      "correct": true
+    },
+    {
+      "question": "where is the protien made in the cell",
+      "gold": "in the cell nucleus",
+      "response": "Proteins are primarily made in the ribosomes within the cytoplasm of a cell, both in eukaryotic and prokaryotic cells. However, the synthesis of proteins begins with the transcription of DNA into mRNA (messenger RNA) in the nucleus of eukaryotic cells. The mRNA then moves out of the nucle",
+      "ppl": 23.5,
+      "correct": true
+    },
+    {
+      "question": "when's the last time the philadelphia eagles played the new england patriots",
+      "gold": "in Super Bowl LII",
+      "response": "The last time the Philadelphia Eagles played the New England Patriots was on November 15, 2020, in a game that the Patriots won 24-21. This game was part of the 2020 NFL regular season.",
+      "ppl": 8.9375,
+      "correct": false
+    }
+  ]
+}
