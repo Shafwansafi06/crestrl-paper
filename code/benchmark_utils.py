@@ -3,6 +3,7 @@ Benchmark Utilities — Shared across NQ, HotpotQA, MuSiQue runners
 ===================================================================
 """
 
+import os
 import sys
 import time
 from pathlib import Path
@@ -10,6 +11,14 @@ from pathlib import Path
 SCRIPT_DIR = str(Path(__file__).parent.resolve())
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
+
+# ─── Cache on G: drive ────────────────────────────────────────────────────────
+CACHE_DIR = Path(SCRIPT_DIR).parent / "workdir" / "hf_cache"
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
+os.environ["HF_HOME"] = str(CACHE_DIR)
+os.environ["HF_DATASETS_CACHE"] = str(CACHE_DIR / "datasets")
+os.environ["HUGGINGFACE_HUB_CACHE"] = str(CACHE_DIR / "hub")
+os.environ["TRANSFORMERS_NO_TORCHVISION"] = "1"
 
 import numpy as np
 import torch
@@ -51,7 +60,13 @@ def is_refusal(response):
 
 def evaluate_response(response, truth):
     rl = response.lower().strip()
-    tl = truth.lower().strip()
+
+    # Handle list-type answers (NQ, etc.)
+    if isinstance(truth, list):
+        tl = str(truth[0]).lower().strip() if truth else ""
+    else:
+        tl = str(truth).lower().strip()
+
     refused = is_refusal(response)
 
     if tl in rl:
@@ -87,22 +102,74 @@ def retrieve_passages_bm25(query, passages, top_k=5):
 
 
 def load_model(path=None, label="Model"):
-    p = path or str(MODEL_CACHE_DIR / "Mistral-7B-Instruct-v0.3")
-    if not Path(p).exists():
-        p = BASE_MODEL
-    print(f"Loading {label}: {p}")
+    base = BASE_MODEL
+    peft_path = path
+
+    # ─── GPU Check ────────────────────────────────────────────────────────────
+    if not torch.cuda.is_available():
+        raise RuntimeError("CUDA not available!")
+
+    gpu_name = torch.cuda.get_device_name(0)
+    props = torch.cuda.get_device_properties(0)
+    gpu_mem = getattr(props, 'total_mem', getattr(props, 'total_memory', 0)) / 1024**3
+    print(f"  GPU: {gpu_name} ({gpu_mem:.1f}GB)")
+
     bnb = BitsAndBytesConfig(
         load_in_4bit=True, bnb_4bit_quant_type="nf4",
         bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True,
     )
-    tok = AutoTokenizer.from_pretrained(p, trust_remote_code=True)
+
+    # ─── Tokenizer (always from base) ─────────────────────────────────────────
+    tok = AutoTokenizer.from_pretrained(base, trust_remote_code=True)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
-    mdl = AutoModelForCausalLM.from_pretrained(
-        p, quantization_config=bnb, device_map="auto",
-        torch_dtype=torch.bfloat16, trust_remote_code=True, low_cpu_mem_usage=True,
-    )
-    print(f"  VRAM: {torch.cuda.memory_allocated()/1024**3:.1f}GB")
+
+    # ─── Model Loading ────────────────────────────────────────────────────────
+    mdl = None
+
+    # Strategy 1: Load merged model
+    if peft_path and Path(peft_path).exists() and (Path(peft_path) / "config.json").exists():
+        print(f"  Loading merged model: {peft_path}")
+        try:
+            mdl = AutoModelForCausalLM.from_pretrained(
+                peft_path, quantization_config=bnb, device_map="auto",
+                torch_dtype=torch.bfloat16, trust_remote_code=True,
+                low_cpu_mem_usage=True,
+            )
+        except Exception as e:
+            print(f"  Merged model failed: {e}")
+            mdl = None
+
+    # Strategy 2: Load base + LoRA adapters
+    if mdl is None:
+        from peft import PeftModel
+        ckpt = str(MODEL_CACHE_DIR.parent / "checkpoints")
+        if Path(ckpt).exists() and (Path(ckpt) / "adapter_config.json").exists():
+            print(f"  Loading base + LoRA from {ckpt}")
+            try:
+                mdl = AutoModelForCausalLM.from_pretrained(
+                    base, quantization_config=bnb, device_map="auto",
+                    torch_dtype=torch.bfloat16, trust_remote_code=True,
+                    low_cpu_mem_usage=True,
+                )
+                mdl = PeftModel.from_pretrained(mdl, ckpt)
+            except Exception as e:
+                print(f"  LoRA load failed: {e}")
+                mdl = None
+
+    # Strategy 3: Load base model only
+    if mdl is None:
+        print(f"  Loading base model: {base}")
+        mdl = AutoModelForCausalLM.from_pretrained(
+            base, quantization_config=bnb, device_map="auto",
+            torch_dtype=torch.bfloat16, trust_remote_code=True,
+            low_cpu_mem_usage=True,
+        )
+
+    device = next(mdl.parameters()).device
+    vram = torch.cuda.memory_allocated() / 1024**3
+    print(f"  Loaded on: {device}, VRAM: {vram:.1f}GB")
+
     return mdl, tok
 
 

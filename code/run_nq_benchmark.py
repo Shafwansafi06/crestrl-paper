@@ -65,6 +65,17 @@ def load_nq(max_samples=None):
             answer = answer_texts[0] if answer_texts else ""
             if not answer:
                 continue
+            # Ensure answer is a string
+            answer = str(answer).strip()
+            if answer.startswith("[") or answer.startswith("("):
+                # Parse list/tuple string like "['text1', 'text2']"
+                import ast
+                try:
+                    parsed = ast.literal_eval(answer)
+                    if isinstance(parsed, (list, tuple)) and parsed:
+                        answer = str(parsed[0])
+                except (ValueError, SyntaxError):
+                    pass
 
             long_answer = item.get("long_answer", "")
             context_pages = []

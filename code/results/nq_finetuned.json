@@ -1,0 +1,19 @@
+{
+  "model": "AnchorGRPO Mistral-7B",
+  "dataset": "NQ",
+  "total": 2564,
+  "accuracy": 54.251170046801874,
+  "hallucination_rate": 33.77535101404056,
+  "refusal_rate": 16.96567862714509,
+  "truthfulness": 37.441497659906396,
+  "time_seconds": 19945.116617918015,
+  "domain_breakdown": {
+    "nq": {
+      "accuracy": 54.251170046801874,
+      "hallucination_rate": 33.77535101404056,
+      "refusal_rate": 16.96567862714509,
+      "truthfulness": 37.441497659906396,
+      "count": 2564
+    }
+  }
+}

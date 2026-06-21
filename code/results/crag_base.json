@@ -1,0 +1,47 @@
+{
+  "model": "Base Mistral-7B",
+  "dataset": "CRAG",
+  "total": 1370,
+  "accuracy": 44.74452554744526,
+  "hallucination_rate": 17.956204379562042,
+  "refusal_rate": 52.26277372262774,
+  "truthfulness": 79.05109489051095,
+  "time_seconds": 7952.321610927582,
+  "domain_breakdown": {
+    "sports": {
+      "accuracy": 41.72932330827068,
+      "hallucination_rate": 11.654135338345863,
+      "refusal_rate": 61.278195488721806,
+      "truthfulness": 91.35338345864662,
+      "count": 266
+    },
+    "finance": {
+      "accuracy": 31.437125748502993,
+      "hallucination_rate": 6.88622754491018,
+      "refusal_rate": 85.02994011976048,
+      "truthfulness": 109.5808383233533,
+      "count": 334
+    },
+    "movie": {
+      "accuracy": 41.05960264900662,
+      "hallucination_rate": 29.80132450331126,
+      "refusal_rate": 38.741721854304636,
+      "truthfulness": 50.0,
+      "count": 302
+    },
+    "open": {
+      "accuracy": 58.02919708029197,
+      "hallucination_rate": 21.532846715328464,
+      "refusal_rate": 32.11678832116788,
+      "truthfulness": 68.61313868613139,
+      "count": 274
+    },
+    "music": {
+      "accuracy": 58.76288659793815,
+      "hallucination_rate": 22.164948453608247,
+      "refusal_rate": 32.98969072164948,
+      "truthfulness": 69.58762886597938,
+      "count": 194
+    }
+  }
+}

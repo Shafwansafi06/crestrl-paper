@@ -1,0 +1,19 @@
+{
+  "model": "Base Mistral-7B",
+  "dataset": "NQ",
+  "total": 2564,
+  "accuracy": 54.13416536661466,
+  "hallucination_rate": 33.892355694227774,
+  "refusal_rate": 16.88767550702028,
+  "truthfulness": 37.129485179407176,
+  "time_seconds": 33909.2586684227,
+  "domain_breakdown": {
+    "nq": {
+      "accuracy": 54.13416536661466,
+      "hallucination_rate": 33.892355694227774,
+      "refusal_rate": 16.88767550702028,
+      "truthfulness": 37.129485179407176,
+      "count": 2564
+    }
+  }
+}

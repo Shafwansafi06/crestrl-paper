@@ -1,12 +1,8 @@
 """
 AnchorGRPO Training — Live Reward Computation
-===============================================
-
-Key fix: rewards are computed during GRPO generation, not pre-computed.
-The model generates completions → same model computes p_know from logits →
-live CrestRL V2 reward → group advantages → gradient update.
-
-This is how GRPO is supposed to work.
+================================================
+Trains on CRAG dataset (like TruthRL) with CrestRL V2 ternary reward.
+Evaluates on CRAG, NQ, HotpotQA, MuSiQue.
 """
 
 import argparse
@@ -22,6 +18,13 @@ if SCRIPT_DIR not in sys.path:
 
 os.environ["TORCHDYNAMO_DISABLE"] = "1"
 os.environ["TORCH_COMPILE_DISABLE"] = "1"
+os.environ["TRANSFORMERS_NO_TORCHVISION"] = "1"
+
+CACHE_DIR = Path(SCRIPT_DIR).parent / "workdir" / "hf_cache"
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
+os.environ["HF_HOME"] = str(CACHE_DIR)
+os.environ["HF_DATASETS_CACHE"] = str(CACHE_DIR / "datasets")
+os.environ["HUGGINGFACE_HUB_CACHE"] = str(CACHE_DIR / "hub")
 
 import numpy as np
 import torch
@@ -29,11 +32,12 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 from config import (
     BASE_MODEL, MODEL_CACHE_DIR, DATA_DIR, CHECKPOINT_DIR, MERGED_DIR,
+    CRAG_DIR, CRAG_MAX_SAMPLES,
     GRPO_CONFIG, EPS_FLOOR, DELTA_ABSTAIN, LAMBDA_CALIB,
-    ALPHA_ANCHOR, PROBE_HIDDEN_DIM, PROBE_NUM_LAYERS,
+    ALPHA_ANCHOR,
 )
 from reward import (
-    BENCHMARK, get_verdict, extract_confidence,
+    get_verdict, extract_confidence,
     compute_live_reward, compute_group_advantages,
 )
 
@@ -75,35 +79,92 @@ def generate(mdl, tok, prompt, temperature=0.7, max_tokens=300):
     return tok.decode(out[0][inp["input_ids"].shape[1]:], skip_special_tokens=True).strip()
 
 
-# ─── Step 1: Data Generation (now minimal — just collect prompts) ─────────────
+# ─── CRAG Training Data Loading (same as TruthRL) ────────────────────────────
+
+GROUNDED_PROMPT = """Based ONLY on the following sources, answer the question.
+If the sources don't contain enough information, say "I don't know".
+If the sources contradict your prior knowledge, trust the sources.
+Do NOT use any information not present in the sources.
+
+Sources:
+{context}
+
+Question: {query}
+Answer:"""
+
+
+def load_crag_training(max_samples=None):
+    """Load CRAG validation split for training (same as TruthRL)."""
+    cache = CRAG_DIR / "crag_validation"
+    try:
+        if cache.exists():
+            from datasets import load_from_disk
+            ds = load_from_disk(str(cache))
+        else:
+            from datasets import load_dataset
+            print("  Downloading CRAG...")
+            ds = load_dataset("Quivr/CRAG", "crag_task_1_and_2", split="train")
+            ds = ds.filter(lambda x: x.get("split", 0) == 0)
+            CRAG_DIR.mkdir(parents=True, exist_ok=True)
+            ds.save_to_disk(str(cache))
+
+        samples = []
+        for i, item in enumerate(ds):
+            if max_samples and i >= max_samples:
+                break
+
+            query = item.get("query", "")
+            answer = item.get("answer", "")
+            if not query or not answer:
+                continue
+
+            search_results = item.get("search_results", [])
+            context_pages = []
+            if isinstance(search_results, list):
+                for sr in search_results[:10]:
+                    page_text = sr.get("page_snippet", "") or sr.get("page_result", "")
+                    if page_text:
+                        context_pages.append(page_text[:500])
+
+            context_str = "\n\n".join([f"[Source {j+1}]: {p}" for j, p in enumerate(context_pages)])
+
+            prompt = GROUNDED_PROMPT.format(context=context_str, query=query) if context_str else f"Answer: {query}"
+
+            samples.append({
+                "prompt": prompt,
+                "expected": answer,
+                "question": query,
+                "domain": item.get("domain", "unknown"),
+            })
+
+        print(f"  CRAG training: {len(samples)} samples")
+        return samples
+
+    except Exception as e:
+        print(f"  CRAG load failed: {e}")
+        return []
+
+
+# ─── Step 1: Data Generation ─────────────────────────────────────────────────
 
 def step_data():
-    """
-    Generate minimal training data: just (prompt, expected) pairs.
-    Rewards will be computed live during training.
-    """
+    """Generate CRAG training data for GRPO (like TruthRL)."""
     print("=" * 60)
-    print("DATA GENERATION — Prompt Collection Only")
+    print("DATA GENERATION — CRAG Training Set")
     print("=" * 60)
-    print("Rewards will be computed live during GRPO training.")
-    print("This step just saves the benchmark prompts.\n")
 
-    data = []
-    for cid, cat, prompt, expected in BENCHMARK:
-        data.append({
-            "prompt": prompt,
-            "expected": expected,
-            "category": cat,
-            "case_id": cid,
-        })
+    samples = load_crag_training(max_samples=CRAG_MAX_SAMPLES)
+    if not samples:
+        print("ERROR: No CRAG samples loaded!")
+        return
 
     out = DATA_DIR / "training_data.jsonl"
     with open(out, "w") as f:
-        for item in data:
+        for item in samples:
             f.write(json.dumps(item) + "\n")
 
-    print(f"Saved {len(data)} prompts to {out}")
-    print("Next step: python train.py --step train")
+    print(f"  Saved {len(samples)} training prompts to {out}")
+    print("  Next step: python train.py --step train")
 
 
 # ─── Step 2: Training with Live Rewards ───────────────────────────────────────
@@ -262,7 +323,11 @@ def step_merge():
         base = BASE_MODEL
     out = str(MERGED_DIR)
 
-    print(f"Merging into {out}")
+    print(f"Merging LoRA into full model...")
+    print(f"  Base: {base}")
+    print(f"  LoRA: {CHECKPOINT_DIR}")
+    print(f"  Output: {out}")
+
     mdl = AutoModelForCausalLM.from_pretrained(
         base, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True,
     )
@@ -270,9 +335,15 @@ def step_merge():
     mdl = mdl.merge_and_unload()
     os.makedirs(out, exist_ok=True)
     mdl.save_pretrained(out)
-    tok = AutoTokenizer.from_pretrained(str(CHECKPOINT_DIR), trust_remote_code=True)
+
+    # Save tokenizer (from checkpoint if available, else from base)
+    try:
+        tok = AutoTokenizer.from_pretrained(str(CHECKPOINT_DIR), trust_remote_code=True)
+    except Exception:
+        print("  Checkpoint tokenizer not found, using base tokenizer")
+        tok = AutoTokenizer.from_pretrained(base, trust_remote_code=True)
     tok.save_pretrained(out)
-    print(f"Merged model: {out}")
+    print(f"  Merged model saved: {out}")
 
 
 if __name__ == "__main__":
