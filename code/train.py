@@ -45,9 +45,11 @@ from reward import (
 # ─── Model Loading ────────────────────────────────────────────────────────────
 
 def load_model(path=None):
-    p = path or str(MODEL_CACHE_DIR / "Mistral-7B-Instruct-v0.3")
-    if not Path(p).exists():
-        p = BASE_MODEL
+    p = path or BASE_MODEL
+    # Fall back to local cache if the string looks like a local dir
+    local = MODEL_CACHE_DIR / Path(p).name
+    if local.exists():
+        p = str(local)
     print(f"Loading: {p}")
     bnb = BitsAndBytesConfig(
         load_in_4bit=True, bnb_4bit_quant_type="nf4",
@@ -153,7 +155,8 @@ def step_data():
     print("DATA GENERATION — CRAG Training Set")
     print("=" * 60)
 
-    samples = load_crag_training(max_samples=CRAG_MAX_SAMPLES)
+    max_s = args.max_samples or CRAG_MAX_SAMPLES
+    samples = load_crag_training(max_samples=max_s)
     if not samples:
         print("ERROR: No CRAG samples loaded!")
         return
@@ -171,17 +174,22 @@ def step_data():
 
 def step_train():
     """
-    AnchorGRPO training with live reward computation.
+    GRPO training with CrestRL or TruthRL reward.
 
-    During each GRPO step:
-    1. Model generates G completions per prompt
-    2. For each completion, compute p_know from the model's own logits
-    3. Compute CrestRL V2 reward using live p_know
-    4. Compute group advantages with variance floor
-    5. Update model via policy gradient
+    Phase 2 flags:
+      --model Qwen/Qwen2.5-1.5B-Instruct
+      --steps 1000
+      --generations 32
+      --reward crestrl   (or truthrl for controlled baseline)
     """
+    reward_label = args.reward.upper()
+    model_id = args.model or BASE_MODEL
+    max_steps = args.steps
+    n_gen = args.generations or GRPO_CONFIG["num_generations"]
+
     print("=" * 60)
-    print("AnchorGRPO TRAINING — Live Rewards")
+    print(f"GRPO TRAINING — {reward_label} reward")
+    print(f"  model={model_id}  steps={max_steps}  G={n_gen}  beta={args.beta}")
     print("=" * 60)
 
     data_path = DATA_DIR / "training_data.jsonl"
@@ -197,7 +205,7 @@ def step_train():
     print(f"Loaded {len(data)} prompts")
 
     # Load model
-    mdl, tok = load_model()
+    mdl, tok = load_model(model_id)
     device = mdl.device
 
     # Apply LoRA
@@ -230,49 +238,45 @@ def step_train():
     _tok_ref = tok
 
     def live_reward_func(completions, prompts=None, **kwargs):
-        """
-        Compute CrestRL V2 rewards LIVE during training.
-
-        This function is called by GRPOTrainer after generating completions.
-        It uses the model's own logits to compute p_know for each completion.
-        """
+        """Reward function called by GRPOTrainer after generating completions."""
         rewards = []
-
         for i, completion in enumerate(completions):
-            # Get the corresponding prompt and expected answer
             idx = i % len(_data)
-            prompt = _data[idx]["prompt"]
+            prompt   = _data[idx]["prompt"]
             expected = _data[idx]["expected"]
 
-            # Compute reward using the model's logits for p_know
             try:
-                reward = compute_live_reward(
-                    model=_model_ref,
-                    tokenizer=_tok_ref,
-                    query=prompt,
-                    completion=completion,
-                    expected=expected,
-                    device=device,
-                    lambda_calib=LAMBDA_CALIB,
-                    lambda_anchor=ALPHA_ANCHOR,
-                    eps_floor=EPS_FLOOR,
-                )
-            except Exception as e:
-                # Fallback: simple binary reward if logit computation fails
+                if args.reward == "truthrl":
+                    # TruthRL baseline: binary outcome reward only, no p_know, no anchor
+                    from reward import get_verdict
+                    v = get_verdict(completion, expected)
+                    reward = 1.0 if v == "correct" else -1.0 if v == "hallucination" else 0.0
+                else:
+                    # CrestRL: full reward with live p_know from logits
+                    reward = compute_live_reward(
+                        model=_model_ref, tokenizer=_tok_ref,
+                        query=prompt, completion=completion,
+                        expected=expected, device=device,
+                        lambda_calib=LAMBDA_CALIB, lambda_anchor=ALPHA_ANCHOR,
+                        eps_floor=EPS_FLOOR,
+                    )
+            except Exception:
                 from reward import get_verdict
                 v = get_verdict(completion, expected)
                 reward = 1.0 if v == "correct" else -1.0 if v == "hallucination" else 0.0
 
             rewards.append(reward)
-
         return rewards
 
     # Create dataset with prompts
     dataset = Dataset.from_list([{"prompt": d["prompt"]} for d in data])
 
-    # GRPO Config
-    args = GRPOConfig(
-        output_dir=str(CHECKPOINT_DIR),
+    # GRPO Config — checkpoint dir includes reward label to keep runs separate
+    ckpt_dir = CHECKPOINT_DIR.parent / f"checkpoints_{args.reward}"
+    ckpt_dir.mkdir(parents=True, exist_ok=True)
+
+    grpo_args = GRPOConfig(
+        output_dir=str(ckpt_dir),
         num_train_epochs=GRPO_CONFIG["num_epochs"],
         per_device_train_batch_size=GRPO_CONFIG["batch_size"],
         gradient_accumulation_steps=GRPO_CONFIG["gradient_accumulation_steps"],
@@ -280,13 +284,14 @@ def step_train():
         lr_scheduler_type=GRPO_CONFIG["lr_scheduler"],
         warmup_ratio=GRPO_CONFIG["warmup_ratio"],
         max_completion_length=GRPO_CONFIG["max_seq_length"],
-        num_generations=GRPO_CONFIG["num_generations"],
-        beta=GRPO_CONFIG["beta"],
+        num_generations=n_gen,
+        generation_batch_size=n_gen,
+        beta=args.beta,
         max_grad_norm=GRPO_CONFIG["max_grad_norm"],
-        max_steps=200,
-        logging_steps=5,
-        save_steps=50,
-        save_total_limit=3,
+        max_steps=max_steps,
+        logging_steps=10,
+        save_steps=100,
+        save_total_limit=2,
         report_to="none",
         remove_unused_columns=False,
         gradient_checkpointing=True,
@@ -295,52 +300,49 @@ def step_train():
         optim="paged_adamw_8bit",
     )
 
-    print("\nStarting AnchorGRPO training (live rewards)...")
+    print(f"\nStarting {reward_label} training  "
+          f"(G={n_gen}, steps={max_steps}, model={model_id})...")
     t0 = time.time()
     trainer = GRPOTrainer(
-        model=mdl, args=args, train_dataset=dataset,
+        model=mdl, args=grpo_args, train_dataset=dataset,
         reward_funcs=live_reward_func, processing_class=tok,
     )
     trainer.train()
     elapsed = time.time() - t0
 
-    out = str(CHECKPOINT_DIR)
-    mdl.save_pretrained(out)
-    tok.save_pretrained(out)
+    mdl.save_pretrained(str(ckpt_dir))
+    tok.save_pretrained(str(ckpt_dir))
 
     print(f"\n{'='*60}")
     print(f"TRAINING COMPLETE — {elapsed/60:.1f} min")
-    print(f"Checkpoint: {out}")
-    print(f"Next: python train.py --step merge")
+    print(f"Checkpoint: {ckpt_dir}")
+    print(f"Next: python train.py --step merge --reward {args.reward}")
 
 
 def step_merge():
     """Merge LoRA weights into full model."""
     from peft import PeftModel
 
-    base = str(MODEL_CACHE_DIR / "Mistral-7B-Instruct-v0.3")
-    if not Path(base).exists():
-        base = BASE_MODEL
-    out = str(MERGED_DIR)
+    base = args.model or BASE_MODEL
+    ckpt_dir = CHECKPOINT_DIR.parent / f"checkpoints_{args.reward}"
+    out = str(MERGED_DIR.parent / f"merged_{args.reward}")
 
     print(f"Merging LoRA into full model...")
-    print(f"  Base: {base}")
-    print(f"  LoRA: {CHECKPOINT_DIR}")
+    print(f"  Base:   {base}")
+    print(f"  LoRA:   {ckpt_dir}")
     print(f"  Output: {out}")
 
     mdl = AutoModelForCausalLM.from_pretrained(
         base, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True,
     )
-    mdl = PeftModel.from_pretrained(mdl, str(CHECKPOINT_DIR))
+    mdl = PeftModel.from_pretrained(mdl, str(ckpt_dir))
     mdl = mdl.merge_and_unload()
     os.makedirs(out, exist_ok=True)
     mdl.save_pretrained(out)
 
-    # Save tokenizer (from checkpoint if available, else from base)
     try:
-        tok = AutoTokenizer.from_pretrained(str(CHECKPOINT_DIR), trust_remote_code=True)
+        tok = AutoTokenizer.from_pretrained(str(ckpt_dir), trust_remote_code=True)
     except Exception:
-        print("  Checkpoint tokenizer not found, using base tokenizer")
         tok = AutoTokenizer.from_pretrained(base, trust_remote_code=True)
     tok.save_pretrained(out)
     print(f"  Merged model saved: {out}")
@@ -349,6 +351,19 @@ def step_merge():
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--step", choices=["data", "train", "merge"], required=True)
+    p.add_argument("--model", default=None,
+                   help="Base model id or path (default: config.BASE_MODEL). "
+                        "Use 'Qwen/Qwen2.5-1.5B-Instruct' for Phase 2.")
+    p.add_argument("--steps", type=int, default=200,
+                   help="Max training steps (default: 200, Phase 2: 1000)")
+    p.add_argument("--generations", type=int, default=None,
+                   help="GRPO group size G (default: config num_generations=4, Phase 2: 32)")
+    p.add_argument("--reward", choices=["crestrl", "truthrl"], default="crestrl",
+                   help="Reward function: crestrl (full) or truthrl (binary baseline)")
+    p.add_argument("--max-samples", type=int, default=None,
+                   help="Max CRAG training samples (default: config.CRAG_MAX_SAMPLES)")
+    p.add_argument("--beta", type=float, default=GRPO_CONFIG["beta"],
+                   help="KL penalty coefficient (default: 0.1). Increase to 0.3-0.5 to prevent reward hacking.")
     args = p.parse_args()
 
     {"data": step_data, "train": step_train, "merge": step_merge}[args.step]()
