@@ -1,0 +1,19 @@
+{
+  "model": "Base Mistral-7B",
+  "dataset": "MuSiQue",
+  "total": 2417,
+  "accuracy": 13.363673976003309,
+  "hallucination_rate": 2.3169218038891186,
+  "refusal_rate": 95.24203558129913,
+  "truthfulness": 106.28878775341333,
+  "time_seconds": 17456.110575437546,
+  "domain_breakdown": {
+    "musique": {
+      "accuracy": 13.363673976003309,
+      "hallucination_rate": 2.3169218038891186,
+      "refusal_rate": 95.24203558129913,
+      "truthfulness": 106.28878775341333,
+      "count": 2417
+    }
+  }
+}

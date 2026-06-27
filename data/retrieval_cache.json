@@ -1,0 +1,222 @@
+{
+  "entries": {
+    "iclr paper improvements plan|tf=5|te=12": {
+      "created_epoch": 1782044808,
+      "files": [
+        "code\\paper_results.py",
+        "code\\anchor_grpo.py::ContextEncoder",
+        "code\\benchmark_utils.py::evaluate_response",
+        "code\\calibrate.py::apply_temperature",
+        "code\\download_datasets.py::download_hotpotqa"
+      ],
+      "mtimes_ns": {
+        "code\\paper_results.py": -1,
+        "code\\anchor_grpo.py::ContextEncoder": -1,
+        "code\\benchmark_utils.py::evaluate_response": -1,
+        "code\\calibrate.py::apply_temperature": -1,
+        "code\\download_datasets.py::download_hotpotqa": -1
+      },
+      "result": {
+        "ok": true,
+        "query": "ICLR paper improvements plan",
+        "graph_files": [
+          {
+            "id": "code\\paper_results.py",
+            "kind": "file",
+            "path": "code\\paper_results.py",
+            "ext": ".py",
+            "size": 10017,
+            "keywords": [
+              "load_json",
+              "load",
+              "json",
+              "latex_main_table",
+              "latex",
+              "main",
+              "table",
+              "latex_crag_table",
+              "crag",
+              "latex_category_table",
+              "category",
+              "latex_design_table",
+              "design",
+              "generate_figures",
+              "generate",
+              "figures",
+              "paper",
+              "results",
+              "generator",
+              "anchorgrpo",
+              "generates",
+              "tables",
+              "binary",
+              "truthrl",
+              "crestrl"
+            ],
+            "summary": "Paper Results Generator \u2014 AnchorGRPO. Contains 5 functions/classes: load_json, latex_main_table, latex_crag_table, latex_category_table, ....",
+            "file_hash": "673e0e54",
+            "_score": 17,
+            "_role": "code",
+            "_intent": "general"
+          },
+          {
+            "id": "code\\anchor_grpo.py::ContextEncoder",
+            "kind": "symbol",
+            "path": "code\\anchor_grpo.py",
+            "ext": ".py",
+            "size": 18,
+            "keywords": [
+              "contextencoder",
+              "context",
+              "encoder"
+            ],
+            "symbol_type": "model",
+            "name": "ContextEncoder",
+            "line_start": 91,
+            "line_end": 108,
+            "body_hash": "4f5a1319",
+            "confidence": "high",
+            "exported": true,
+            "_score": 10,
+            "_role": "code",
+            "_intent": "general"
+          },
+          {
+            "id": "code\\benchmark_utils.py::evaluate_response",
+            "kind": "symbol",
+            "path": "code\\benchmark_utils.py",
+            "ext": ".py",
+            "size": 29,
+            "keywords": [
+              "evaluate_response",
+              "evaluate",
+              "response"
+            ],
+            "symbol_type": "use_case",
+            "name": "evaluate_response",
+            "line_start": 60,
+            "line_end": 88,
+            "body_hash": "a58e6837",
+            "confidence": "high",
+            "exported": true,
+            "_score": 10,
+            "_role": "code",
+            "_intent": "general"
+          },
+          {
+            "id": "code\\calibrate.py::apply_temperature",
+            "kind": "symbol",
+            "path": "code\\calibrate.py",
+            "ext": ".py",
+            "size": 3,
+            "keywords": [
+              "apply_temperature",
+              "apply",
+              "temperature"
+            ],
+            "symbol_type": "use_case",
+            "name": "apply_temperature",
+            "line_start": 110,
+            "line_end": 112,
+            "body_hash": "ec928c50",
+            "confidence": "high",
+            "exported": true,
+            "_score": 10,
+            "_role": "code",
+            "_intent": "general"
+          },
+          {
+            "id": "code\\download_datasets.py::download_hotpotqa",
+            "kind": "symbol",
+            "path": "code\\download_datasets.py",
+            "ext": ".py",
+            "size": 17,
+            "keywords": [
+              "download_hotpotqa",
+              "download",
+              "hotpotqa"
+            ],
+            "symbol_type": "use_case",
+            "name": "download_hotpotqa",
+            "line_start": 49,
+            "line_end": 65,
+            "body_hash": "15830600",
+            "confidence": "high",
+            "exported": true,
+            "_score": 10,
+            "_role": "code",
+            "_intent": "general"
+          }
+        ],
+        "graph_edges": [
+          {
+            "from": "code\\paper_results.py",
+            "to": "config",
+            "rel": "imports"
+          },
+          {
+            "from": "code\\paper_results.py",
+            "to": "json",
+            "rel": "imports"
+          },
+          {
+            "from": "code\\paper_results.py",
+            "to": "matplotlib",
+            "rel": "imports"
+          },
+          {
+            "from": "code\\paper_results.py",
+            "to": "matplotlib.pyplot",
+            "rel": "imports"
+          },
+          {
+            "from": "code\\paper_results.py",
+            "to": "numpy",
+            "rel": "imports"
+          },
+          {
+            "from": "code\\paper_results.py",
+            "to": "os",
+            "rel": "imports"
+          },
+          {
+            "from": "code\\paper_results.py",
+            "to": "pathlib",
+            "rel": "imports"
+          },
+          {
+            "from": "code\\paper_results.py",
+            "to": "sys",
+            "rel": "imports"
+          },
+          {
+            "from": "code\\paper_results.py",
+            "to": "code\\paper_results.py::generate_figures",
+            "rel": "contains"
+          },
+          {
+            "from": "code\\paper_results.py",
+            "to": "code\\paper_results.py::latex_category_table",
+            "rel": "contains"
+          },
+          {
+            "from": "code\\paper_results.py",
+            "to": "code\\paper_results.py::latex_crag_table",
+            "rel": "contains"
+          },
+          {
+            "from": "code\\paper_results.py",
+            "to": "code\\paper_results.py::latex_design_table",
+            "rel": "contains"
+          }
+        ],
+        "grep_hits": [],
+        "reuse_candidates": [],
+        "read_budget": {
+          "remaining_chars": 60000,
+          "reuse_gate_candidates": []
+        }
+      }
+    }
+  }
+}

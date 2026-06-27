@@ -1,0 +1,150 @@
+{
+  "nq": {
+    "n": 150,
+    "accuracy": {
+      "mean": 56.7,
+      "ci95": [
+        49.3,
+        64.7
+      ]
+    },
+    "refusal_rate": {
+      "mean": 20.0,
+      "ci95": [
+        14.0,
+        26.7
+      ]
+    },
+    "hallucination": {
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "adversarial": {
+    "n": 60,
+    "accuracy": {
+      "mean": 10.0,
+      "ci95": [
+        3.3,
+        18.3
+      ]
+    },
+    "refusal_rate": {
+      "mean": 10.0,
+      "ci95": [
+        3.3,
+        18.3
+      ]
+    },
+    "hallucination": {
+      "mean": 26.7,
+      "ci95": [
+        15.0,
+        38.3
+      ]
+    }
+  },
+  "by_category": {
+    "ambiguous": {
+      "n": 6,
+      "accuracy": {
+        "mean": 33.3,
+        "ci95": [
+          0.0,
+          66.7
+        ]
+      }
+    },
+    "code_trap": {
+      "n": 6,
+      "accuracy": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "fake_api": {
+      "n": 8,
+      "accuracy": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "fake_npm": {
+      "n": 7,
+      "accuracy": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "fake_rfc": {
+      "n": 9,
+      "accuracy": {
+        "mean": 11.1,
+        "ci95": [
+          0.0,
+          33.3
+        ]
+      }
+    },
+    "financial": {
+      "n": 6,
+      "accuracy": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "legal": {
+      "n": 3,
+      "accuracy": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "medical": {
+      "n": 7,
+      "accuracy": {
+        "mean": 42.9,
+        "ci95": [
+          14.3,
+          85.7
+        ]
+      }
+    },
+    "multi_hop": {
+      "n": 8,
+      "accuracy": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "reward_correlation": {
+    "r": 0.24,
+    "ci95": [
+      0.1415,
+      0.3295
+    ],
+    "p": 0.0004
+  }
+}

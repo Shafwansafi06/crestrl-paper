@@ -1,0 +1,220 @@
+{
+  "retrieval_quality": {
+    "n_total": 200,
+    "n_no_context": 0,
+    "retrieval_recall": 0.245,
+    "full_context_recall": 1.0,
+    "mean_passage_count": 19.995
+  },
+  "retrieval_failures_sample": [
+    {
+      "question": "Who is the spouse of the Green performer?",
+      "answer": "Miquette Giraudy",
+      "n_passages": 20,
+      "n_retrieved": 5,
+      "answer_in_retrieved": false,
+      "answer_in_full": true
+    },
+    {
+      "question": "Who founded the company that distributed the film UHF?",
+      "answer": "Mike Medavoy",
+      "n_passages": 20,
+      "n_retrieved": 5,
+      "answer_in_retrieved": false,
+      "answer_in_full": true
+    },
+    {
+      "question": "Where is Ulrich Walter's employer headquartered?",
+      "answer": "Cologne",
+      "n_passages": 20,
+      "n_retrieved": 5,
+      "answer_in_retrieved": false,
+      "answer_in_full": true
+    },
+    {
+      "question": "Which company owns the manufacturer of Learjet 60?",
+      "answer": "Bombardier Inc.",
+      "n_passages": 20,
+      "n_retrieved": 5,
+      "answer_in_retrieved": false,
+      "answer_in_full": true
+    },
+    {
+      "question": "Who is the grandmother of Philippe, Duke of Orl\u00e9ans?",
+      "answer": "Marie de' Medici",
+      "n_passages": 20,
+      "n_retrieved": 5,
+      "answer_in_retrieved": false,
+      "answer_in_full": true
+    }
+  ],
+  "live_responses": {
+    "n": 20,
+    "refused": 20,
+    "refused_unrecoverable": 14,
+    "refused_recoverable": 6,
+    "records": [
+      {
+        "question": "Who is the spouse of the Green performer?",
+        "gold": "Miquette Giraudy",
+        "n_passages_total": 20,
+        "answer_in_retrieved": false,
+        "response": "I don't know. The sources provided do not mention the spouse of any Green performer.",
+        "refused": true
+      },
+      {
+        "question": "Who founded the company that distributed the film UHF?",
+        "gold": "Mike Medavoy",
+        "n_passages_total": 20,
+        "answer_in_retrieved": false,
+        "response": "I don't know. The sources provided do not contain information about the distribution company for the film UHF.",
+        "refused": true
+      },
+      {
+        "question": "What administrative territorial entity is the owner of Ciudad Deportiva located?",
+        "gold": "Tamaulipas",
+        "n_passages_total": 20,
+        "answer_in_retrieved": true,
+        "response": "I don't know. The sources provided do not contain information about the location of Ciudad Deportiva.",
+        "refused": true
+      },
+      {
+        "question": "Where is Ulrich Walter's employer headquartered?",
+        "gold": "Cologne",
+        "n_passages_total": 20,
+        "answer_in_retrieved": false,
+        "response": "I don't know. The sources provided do not contain information about Ulrich Walter or his employer.",
+        "refused": true
+      },
+      {
+        "question": "Which company owns the manufacturer of Learjet 60?",
+        "gold": "Bombardier Inc.",
+        "n_passages_total": 20,
+        "answer_in_retrieved": false,
+        "response": "I don't know. The sources provided do not contain information about the manufacturer of the Learjet 60.",
+        "refused": true
+      },
+      {
+        "question": "Who is the child of Caroline LeRoy's spouse?",
+        "gold": "Fletcher Webster",
+        "n_passages_total": 20,
+        "answer_in_retrieved": true,
+        "response": "I don't know. The sources provided do not contain information about Caroline LeRoy or her spouse.",
+        "refused": true
+      },
+      {
+        "question": "Who is the grandmother of Philippe, Duke of Orl\u00e9ans?",
+        "gold": "Marie de' Medici",
+        "n_passages_total": 20,
+        "answer_in_retrieved": false,
+        "response": "I don't know. The sources provided do not contain information about the family tree of Philippe, Duke of Orl\u00e9ans, so it is not possible to determine his grandmother from these sources.",
+        "refused": true
+      },
+      {
+        "question": "What is the goal of the group that European Movement Germany is a member of?",
+        "gold": "European integration",
+        "n_passages_total": 20,
+        "answer_in_retrieved": false,
+        "response": "I don't know. The sources provided do not specify the goal of the group that European Movement Germany is a member of.",
+        "refused": true
+      },
+      {
+        "question": "What company succeeded the owner of Empire Sports Network?",
+        "gold": "Time Warner Cable",
+        "n_passages_total": 20,
+        "answer_in_retrieved": false,
+        "response": "I don't know. The sources provided do not contain information about the successor of the owner of Empire Sports Network.",
+        "refused": true
+      },
+      {
+        "question": "What province shares a border with the province where Lago District is located?",
+        "gold": "Cabo Delgado Province",
+        "n_passages_total": 20,
+        "answer_in_retrieved": true,
+        "response": "I don't know. The sources provided do not mention any information about a \"Lago District\" or a province that shares a border with it.",
+        "refused": true
+      },
+      {
+        "question": "What league does the team that plays in Stadio Ciro Vigorito play for?",
+        "gold": "Lega Pro Prima Divisione",
+        "n_passages_total": 20,
+        "answer_in_retrieved": false,
+        "response": "I don't know. The sources provided do not mention the team that plays in Stadio Ciro Vigoristio.",
+        "refused": true
+      },
+      {
+        "question": "What is a notable work written by the author of The Timothy files?",
+        "gold": "Anderson Tapes",
+        "n_passages_total": 20,
+        "answer_in_retrieved": false,
+        "response": "I don't know. The sources provided do not mention any notable work written by the author of \"The Timothy Files\". They only provide information about the author's name, Martine Blanc, and her other wor",
+        "refused": true
+      },
+      {
+        "question": "In which borough was Callum McManaman born?",
+        "gold": "Knowsley",
+        "n_passages_total": 20,
+        "answer_in_retrieved": false,
+        "response": "I don't know. The sources provided do not contain information about Callum McManaman's birthplace.",
+        "refused": true
+      },
+      {
+        "question": "What other county does the county where Imperial is located share a border with?",
+        "gold": "Crockett County",
+        "n_passages_total": 20,
+        "answer_in_retrieved": false,
+        "response": "I don't know. The sources provided do not contain information about the location of Imperial, a city or county in the United States.",
+        "refused": true
+      },
+      {
+        "question": "In what county is William W. Blair's birthplace located?",
+        "gold": "Orleans County",
+        "n_passages_total": 20,
+        "answer_in_retrieved": false,
+        "response": "I don't know. The sources provided do not contain information about William W. Blair's birthplace.",
+        "refused": true
+      },
+      {
+        "question": "What award did the author of The Red Tree receive?",
+        "gold": "Academy Award for Best Animated Short Film",
+        "n_passages_total": 20,
+        "answer_in_retrieved": true,
+        "response": "I don't know. The sources provided do not mention any information about the author of \"The Red Tree\" or any awards they may have received.",
+        "refused": true
+      },
+      {
+        "question": "Where was Tyler MacDuff's child educated?",
+        "gold": "Blair High School",
+        "n_passages_total": 20,
+        "answer_in_retrieved": false,
+        "response": "I don't know. The sources provided do not contain information about Tyler MacDuff or his child.",
+        "refused": true
+      },
+      {
+        "question": "Who is the spouse of the Rabbit Hole's producer?",
+        "gold": "Keith Urban",
+        "n_passages_total": 20,
+        "answer_in_retrieved": true,
+        "response": "I don't know. The sources provided do not contain information about the spouse of the Rabbit Hole's producer.",
+        "refused": true
+      },
+      {
+        "question": "Who is the child of Sigrid Eskilsdotter's child?",
+        "gold": "Svante Stensson Sture",
+        "n_passages_total": 20,
+        "answer_in_retrieved": true,
+        "response": "I don't know. The sources do not provide information about Sigrid Eskilsdotter's child or their offspring.",
+        "refused": true
+      },
+      {
+        "question": "In which county is Kimbrough Memorial Stadium located?",
+        "gold": "Randall County",
+        "n_passages_total": 20,
+        "answer_in_retrieved": false,
+        "response": "I don't know. The sources provided do not contain information about the location of Kimbrough Memorial Stadium beyond it being in Canyon, Texas. They do not specify the county in which Canyon is locat",
+        "refused": true
+      }
+    ]
+  },
+  "verdict": "DROP MuSiQue. BM25 retrieval recall is too low for multi-hop questions. The 95% refusal rate is a retrieval artefact, not a model behaviour. Including it in the paper confounds all comparisons."
+}

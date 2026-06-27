@@ -1,0 +1,43 @@
+{
+  "base": {
+    "model": "Base model",
+    "n_samples": 50,
+    "n_seeds": 5,
+    "latency_per_sample": {
+      "mean_s": 8.0969,
+      "ci95": [
+        7.7437,
+        8.4485
+      ]
+    },
+    "ms_per_token": {
+      "mean": 106.7,
+      "ci95": [
+        106.22,
+        107.15
+      ]
+    },
+    "throughput_samples_per_sec": 0.124
+  },
+  "finetuned": {
+    "model": "Finetuned (G:\\Hallucination paper\\quadro_scripts\\code\\workdir\\merged_model)",
+    "n_samples": 50,
+    "n_seeds": 5,
+    "latency_per_sample": {
+      "mean_s": 4.8644,
+      "ci95": [
+        4.6584,
+        5.0666
+      ]
+    },
+    "ms_per_token": {
+      "mean": 63.68,
+      "ci95": [
+        63.31,
+        64.08
+      ]
+    },
+    "throughput_samples_per_sec": 0.206
+  },
+  "delta_pct": -39.9
+}

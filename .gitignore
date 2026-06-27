@@ -37,3 +37,4 @@ Thumbs.db
 # Temp
 *.tmp
 *.swp
+.dual-graph/

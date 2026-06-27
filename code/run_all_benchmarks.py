@@ -6,7 +6,9 @@ Optimized for Quadro RTX 5000 (16GB VRAM) — one model at a time.
 """
 
 import argparse
+import gc
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -14,6 +16,8 @@ from pathlib import Path
 SCRIPT_DIR = str(Path(__file__).parent.resolve())
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
+
+os.environ["TRANSFORMERS_NO_TORCHVISION"] = "1"
 
 import torch
 
@@ -37,14 +41,11 @@ def run_benchmark_suite(dataset_name, samples, model_path=None, max_samples=None
     ft_file = RESULTS_DIR / f"{dataset_name.lower()}_finetuned.json"
     comp_file = RESULTS_DIR / f"{dataset_name.lower()}_comparison.json"
 
-    if base_file.exists() and ft_file.exists():
-        print(f"  Results already exist, skipping {dataset_name}")
-        return
-
+    # ─── Base Model ───────────────────────────────────────────────────────────
     if not base_file.exists():
         bm, bt = load_model(label="Base Mistral-7B")
         br = run_benchmark(bm, bt, samples, "Base Mistral-7B", dataset_name)
-        del bm, bt; torch.cuda.empty_cache()
+        del bm, bt; gc.collect(); torch.cuda.empty_cache()
         with open(base_file, "w") as f:
             json.dump(br["summary"], f, indent=2)
         print(f"  Saved: {base_file}")
@@ -52,29 +53,29 @@ def run_benchmark_suite(dataset_name, samples, model_path=None, max_samples=None
         print(f"  Base results exist, skipping base run")
         br = {"summary": json.load(open(base_file))}
 
+    # ─── Finetuned Model (skip if not available) ─────────────────────────────
     if not ft_file.exists():
-        fm, ft = load_model(model_path, "AnchorGRPO Mistral-7B")
-        fr = run_benchmark(fm, ft, samples, "AnchorGRPO Mistral-7B", dataset_name)
-        del fm, ft; torch.cuda.empty_cache()
-        with open(ft_file, "w") as f:
-            json.dump(fr["summary"], f, indent=2)
-        print(f"  Saved: {ft_file}")
-    else:
-        print(f"  Finetuned results exist, skipping finetuned run")
-        fr = {"summary": json.load(open(ft_file))}
+        # Check if model path is valid before trying to load
+        has_model = False
+        if model_path:
+            from pathlib import Path as _P
+            mp = _P(model_path)
+            # Check merged model or checkpoints
+            merged_cfg = mp / "config.json" if mp.exists() else None
+            ckpt_cfg = RESULTS_DIR.parent / "checkpoints" / "adapter_config.json"
+            has_model = (merged_cfg and merged_cfg.exists()) or ckpt_cfg.exists()
 
-    if not comp_file.exists():
-        comp = {
-            "base": br["summary"],
-            "anchor_grpo": fr["summary"],
-            "delta": {
-                k: fr["summary"][k] - br["summary"][k]
-                for k in ["accuracy", "hallucination_rate", "refusal_rate", "truthfulness"]
-            },
-        }
-        with open(comp_file, "w") as f:
-            json.dump(comp, f, indent=2)
-        print(f"  Saved: {comp_file}")
+        if has_model:
+            fm, ft = load_model(model_path, "AnchorGRPO Mistral-7B")
+            fr = run_benchmark(fm, ft, samples, "AnchorGRPO Mistral-7B", dataset_name)
+            del fm, ft; gc.collect(); torch.cuda.empty_cache()
+            with open(ft_file, "w") as f:
+                json.dump(fr["summary"], f, indent=2)
+            print(f"  Saved: {ft_file}")
+        else:
+            print(f"  No finetuned model found — skipping finetuned evaluation")
+            print(f"  To run: train the model first with: python train.py --step data && python train.py --step train && python train.py --step merge")
+            return
 
 
 def main():
@@ -96,7 +97,8 @@ def main():
 
     if "crag" in args.datasets:
         from run_crag_benchmark import load_crag
-        samples = load_crag(args.max_samples or 500)
+        crag_max = args.max_samples if args.max_samples else None
+        samples = load_crag(crag_max)
         run_benchmark_suite("CRAG", samples, args.model, args.max_samples)
 
     if "nq" in args.datasets:

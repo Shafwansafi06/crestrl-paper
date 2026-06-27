@@ -1,0 +1,22 @@
+{
+  "abstention": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "tp": 22,
+    "fp": 0,
+    "fn": 0,
+    "tn": 69
+  },
+  "confidence_correlation": {
+    "r": 0.04876630279261722,
+    "p": 0.6462030852680873,
+    "mean_conf_correct": 0.6725490196078431,
+    "mean_conf_incorrect": 0.65,
+    "no_signal_pct": 0.4725274725274725
+  },
+  "hallucination_recall_EXISTS": 0.0,
+  "paraphrase_failures": 0,
+  "paraphrase_total": 9,
+  "confidence_verdict": "CONFIDENCE EXTRACTION UNRELIABLE \u2014 confidence reward is noise"
+}

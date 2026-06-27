@@ -1,0 +1,19 @@
+{
+  "model": "Base Mistral-7B",
+  "dataset": "HotpotQA",
+  "total": 7405,
+  "accuracy": 50.033760972316,
+  "hallucination_rate": 19.75692099932478,
+  "refusal_rate": 46.630654962862934,
+  "truthfulness": 76.90749493585415,
+  "time_seconds": 80925.40791749954,
+  "domain_breakdown": {
+    "hotpotqa": {
+      "accuracy": 50.033760972316,
+      "hallucination_rate": 19.75692099932478,
+      "refusal_rate": 46.630654962862934,
+      "truthfulness": 76.90749493585415,
+      "count": 7405
+    }
+  }
+}

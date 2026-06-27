@@ -1,0 +1,82 @@
+{
+  "nodes": [
+    {
+      "id": "query:iclr paper improvements plan",
+      "type": "query",
+      "meta": {
+        "text": "ICLR paper improvements plan"
+      }
+    },
+    {
+      "id": "code\\paper_results.py",
+      "type": "file"
+    },
+    {
+      "id": "code\\anchor_grpo.py::ContextEncoder",
+      "type": "file"
+    },
+    {
+      "id": "code\\benchmark_utils.py::evaluate_response",
+      "type": "file"
+    },
+    {
+      "id": "code\\calibrate.py::apply_temperature",
+      "type": "file"
+    },
+    {
+      "id": "code\\download_datasets.py::download_hotpotqa",
+      "type": "file"
+    }
+  ],
+  "edges": [
+    {
+      "from": "query:iclr paper improvements plan",
+      "to": "code\\paper_results.py",
+      "rel": "retrieved",
+      "ts": 1782044808
+    },
+    {
+      "from": "query:iclr paper improvements plan",
+      "to": "code\\anchor_grpo.py::ContextEncoder",
+      "rel": "retrieved",
+      "ts": 1782044808
+    },
+    {
+      "from": "query:iclr paper improvements plan",
+      "to": "code\\benchmark_utils.py::evaluate_response",
+      "rel": "retrieved",
+      "ts": 1782044808
+    },
+    {
+      "from": "query:iclr paper improvements plan",
+      "to": "code\\calibrate.py::apply_temperature",
+      "rel": "retrieved",
+      "ts": 1782044808
+    },
+    {
+      "from": "query:iclr paper improvements plan",
+      "to": "code\\download_datasets.py::download_hotpotqa",
+      "rel": "retrieved",
+      "ts": 1782044808
+    }
+  ],
+  "files": {},
+  "actions": [
+    {
+      "ts": 1782044808,
+      "kind": "retrieve",
+      "payload": {
+        "kind": "retrieve",
+        "query": "ICLR paper improvements plan"
+      }
+    },
+    {
+      "ts": 1782044808,
+      "kind": "continue_retrieve",
+      "payload": {
+        "kind": "continue_retrieve",
+        "query": "ICLR paper improvements plan"
+      }
+    }
+  ]
+}

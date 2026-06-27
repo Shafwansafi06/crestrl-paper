@@ -3,9 +3,11 @@ Dataset Downloader — NQ, HotpotQA, MuSiQue
 ============================================
 Downloads and caches datasets from HuggingFace for TruthRL benchmark evaluation.
 Runs on CPU only — no VRAM required.
+Cache stored on G: drive to avoid filling C: drive.
 """
 
 import argparse
+import os
 import sys
 import time
 from pathlib import Path
@@ -13,6 +15,15 @@ from pathlib import Path
 SCRIPT_DIR = str(Path(__file__).parent.resolve())
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
+
+# ─── Cache on G: drive (same as codebase) ─────────────────────────────────────
+CACHE_DIR = Path(SCRIPT_DIR).parent / "workdir" / "hf_cache"
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
+os.environ["HF_HOME"] = str(CACHE_DIR)
+os.environ["HF_DATASETS_CACHE"] = str(CACHE_DIR / "datasets")
+os.environ["HUGGINGFACE_HUB_CACHE"] = str(CACHE_DIR / "hub")
+os.environ["TRANSFORMERS_NO_TORCHVISION"] = "1"
+print(f"  HF cache: {CACHE_DIR}")
 
 from config import NQ_DATASET, NQ_DIR, HOTPOTQA_DATASET, HOTPOTQA_DIR, MUSIQUE_DATASET, MUSIQUE_DIR
 

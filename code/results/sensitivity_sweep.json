@@ -1,0 +1,93 @@
+{
+  "baseline_r": 0.24,
+  "gamma_sweep": [
+    {
+      "gamma": 1.5,
+      "r_all": 0.2399,
+      "r_nq": 0.1289,
+      "r_adv": 0.2118,
+      "p_all": 0.000452
+    },
+    {
+      "gamma": 2.0,
+      "r_all": 0.24,
+      "r_nq": 0.1289,
+      "r_adv": 0.2118,
+      "p_all": 0.00045
+    },
+    {
+      "gamma": 2.5,
+      "r_all": 0.2401,
+      "r_nq": 0.1289,
+      "r_adv": 0.2118,
+      "p_all": 0.000447
+    },
+    {
+      "gamma": 3.0,
+      "r_all": 0.2402,
+      "r_nq": 0.1289,
+      "r_adv": 0.2117,
+      "p_all": 0.000445
+    }
+  ],
+  "weight_perturbation": [
+    {
+      "param": "w_o",
+      "value": 0.664,
+      "r_all": 0.2403,
+      "delta_r": 0.0003,
+      "direction": "stable"
+    },
+    {
+      "param": "w_o",
+      "value": 0.996,
+      "r_all": 0.2398,
+      "delta_r": -0.0002,
+      "direction": "stable"
+    },
+    {
+      "param": "lam_a",
+      "value": 0.32,
+      "r_all": 0.2399,
+      "delta_r": -0.0002,
+      "direction": "stable"
+    },
+    {
+      "param": "lam_a",
+      "value": 0.48,
+      "r_all": 0.2401,
+      "delta_r": 0.0001,
+      "direction": "stable"
+    },
+    {
+      "param": "w_c",
+      "value": 0.128,
+      "r_all": 0.2399,
+      "delta_r": -0.0001,
+      "direction": "stable"
+    },
+    {
+      "param": "w_c",
+      "value": 0.192,
+      "r_all": 0.2401,
+      "delta_r": 0.0001,
+      "direction": "stable"
+    },
+    {
+      "param": "lam_c",
+      "value": 0.176,
+      "r_all": 0.2399,
+      "delta_r": -0.0001,
+      "direction": "stable"
+    },
+    {
+      "param": "lam_c",
+      "value": 0.264,
+      "r_all": 0.2401,
+      "delta_r": 0.0001,
+      "direction": "stable"
+    }
+  ],
+  "best_gamma": 3.0,
+  "n_unstable_weights": 0
+}

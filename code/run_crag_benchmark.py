@@ -20,6 +20,8 @@ SCRIPT_DIR = str(Path(__file__).parent.resolve())
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
+os.environ["TRANSFORMERS_NO_TORCHVISION"] = "1"
+
 import numpy as np
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
@@ -111,7 +113,8 @@ def load_crag(max_samples=500):
 
         samples = []
         for i, item in enumerate(ds):
-            if i >= max_samples: break
+            if max_samples is not None and i >= max_samples:
+                break
             # Parse search_results for context
             search_results = item.get("search_results", [])
             context_pages = []
